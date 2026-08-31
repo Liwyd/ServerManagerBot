@@ -8,6 +8,7 @@ set -e
 INSTALL_DIR="/opt/servermanagerbot"
 REPO_URL="https://github.com/Liwyd/ServerManagerBot.git"
 BRANCH="master"
+DOCKER_IMAGE="liwyd/servermanagerbot:latest"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -32,7 +33,7 @@ generate_password() {
     fi
 }
 
-# Ensure interactive prompts work even when piped (curl | sudo bash)
+# Ensure interactive prompts work even when piped
 if [ ! -t 0 ] && [ -e /dev/tty ]; then
     exec </dev/tty
 fi
@@ -137,8 +138,20 @@ mkdir -p "$INSTALL_DIR/data"
 
 header "Pulling and starting services"
 
+BUILD_LOCAL=false
 log "Pulling Docker image from Docker Hub..."
-docker compose pull
+if docker compose pull 2>/dev/null; then
+    log "Image pulled successfully."
+else
+    warn "Docker Hub image not found. Building locally..."
+    BUILD_LOCAL=true
+fi
+
+if [ "$BUILD_LOCAL" = true ]; then
+    sed -i 's|^    image:.*|    build: .|' "$INSTALL_DIR/docker-compose.yml"
+    log "Building Docker image locally..."
+    docker compose build
+fi
 
 log "Starting services..."
 docker compose up -d
