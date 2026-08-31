@@ -14,7 +14,7 @@ Telegram bot for managing Hetzner Cloud servers, snapshots, and primary IPs.
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
 ```
 
 The installer will:

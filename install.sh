@@ -2,12 +2,12 @@
 set -e
 
 # ServerManagerBot - One-line Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh | sudo bash
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
 
 INSTALL_DIR="/opt/servermanagerbot"
 REPO_URL="https://github.com/Liwyd/ServerManagerBot.git"
 BRANCH="master"
-DOCKER_IMAGE="liwyd/servermanagerbot:latest"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,6 +31,11 @@ generate_password() {
         head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 32
     fi
 }
+
+# Ensure interactive prompts work even when piped (curl | sudo bash)
+if [ ! -t 0 ] && [ -e /dev/tty ]; then
+    exec </dev/tty
+fi
 
 header "ServerManagerBot Installer"
 
@@ -91,14 +96,14 @@ if [ ! -f "$INSTALL_DIR/.env" ] || [ "$EXISTING_ENV" != "true" ]; then
     PG_PASSWORD=$(generate_password)
 
     echo -n "Enter your Telegram Bot Token: "
-    read -r BOT_TOKEN < /dev/tty
+    read -r BOT_TOKEN
     if [ -z "$BOT_TOKEN" ]; then
         error "Telegram Bot Token is required."
         exit 1
     fi
 
     echo -n "Enter your Telegram Admin ID: "
-    read -r ADMIN_ID < /dev/tty
+    read -r ADMIN_ID
     if [ -z "$ADMIN_ID" ]; then
         error "Telegram Admin ID is required."
         exit 1
