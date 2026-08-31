@@ -43,7 +43,7 @@ class BotKB:
                 ),
                 size=1,
             )
-        kb.row(InlineKeyboardButton(text=Buttons.OWNER, url="https://t.me/erfjabs"), size=1)
+        kb.row(InlineKeyboardButton(text=Buttons.OWNER, url="https://t.me/ServerManagerBot"), size=1)
         return kb.as_markup()
 
     @classmethod

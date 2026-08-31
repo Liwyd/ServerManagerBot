@@ -3,7 +3,7 @@ name: Release Build
 on:
   push:
     tags:
-      - "v*.*.*" 
+      - "v*.*.*"
 
 jobs:
   build-docker-image:
@@ -14,30 +14,34 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU for multi-platform support
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/amd64,linux/arm64
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.TOKEN_GITHUB }}
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v3
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ghcr.io/erfjab/servermanagerbot:latest
-            ghcr.io/erfjab/servermanagerbot:${{ github.sha }}
-            ghcr.io/erfjab/servermanagerbot:${{ github.ref_name }}
+          push: false
+          load: true
+          tags: servermanagerbot:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Save Docker Image
+        run: |
+          docker save servermanagerbot:${{ github.ref_name }} | gzip > servermanagerbot-${{ github.ref_name }}.tar.gz
+
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: servermanagerbot-${{ github.ref_name }}
+          path: servermanagerbot-${{ github.ref_name }}.tar.gz
+          retention-days: 30

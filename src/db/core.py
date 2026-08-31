@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -6,10 +7,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from src.config import SQLALCHEMY_DATABASE_URL
 
+logger = logging.getLogger(__name__)
+
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
-    pool_size=50,
-    max_overflow=-1,
+    pool_size=5,
+    max_overflow=10,
     pool_timeout=30,
     pool_pre_ping=True,
     echo=False,
@@ -33,3 +36,10 @@ async def GetDB() -> AsyncIterator[AsyncSession]:
     async with AsyncSessionLocal() as session:
         async with session.begin():
             yield session
+
+
+async def create_migration_engine():
+    return create_async_engine(
+        SQLALCHEMY_DATABASE_URL,
+        poolclass=None,
+    )
