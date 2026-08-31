@@ -17,3 +17,8 @@ dependencies = [
     "apscheduler>=3.11.0",
     "aiohttp>=3.13.2",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4.0",
+]
