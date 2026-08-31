@@ -1,6 +1,6 @@
 services:
   servermanagerbot:
-    image: ${DOCKERHUB_USERNAME:-liwyd}/servermanagerbot:latest
+    image: liwyd/servermanagerbot:latest
     restart: always
     env_file:
       - .env
