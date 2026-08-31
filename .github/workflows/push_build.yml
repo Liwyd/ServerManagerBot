@@ -38,8 +38,6 @@ jobs:
           push: false
           load: true
           tags: servermanagerbot:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Verify Docker Image
         run: |
