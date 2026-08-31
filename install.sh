@@ -91,14 +91,14 @@ if [ ! -f "$INSTALL_DIR/.env" ] || [ "$EXISTING_ENV" != "true" ]; then
     PG_PASSWORD=$(generate_password)
 
     echo -n "Enter your Telegram Bot Token: "
-    read -r BOT_TOKEN
+    read -r BOT_TOKEN < /dev/tty
     if [ -z "$BOT_TOKEN" ]; then
         error "Telegram Bot Token is required."
         exit 1
     fi
 
     echo -n "Enter your Telegram Admin ID: "
-    read -r ADMIN_ID
+    read -r ADMIN_ID < /dev/tty
     if [ -z "$ADMIN_ID" ]; then
         error "Telegram Admin ID is required."
         exit 1
