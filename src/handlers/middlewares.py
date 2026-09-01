@@ -28,4 +28,11 @@ class Middleware(BaseMiddleware):
             except Exception as e:
                 if e == "Access Denied":
                     return
+                msg = str(e).lower()
+                if "message is not modified" in msg:
+                    if update.callback_query:
+                        await update.callback_query.answer()
+                    return
+                if "query is too old" in msg or "query id is too old" in msg:
+                    return
                 raise e

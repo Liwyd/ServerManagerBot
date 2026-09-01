@@ -61,9 +61,9 @@ async def servers_info(
         ram=server.server_type.memory,
         cpu=server.server_type.cores,
         created=server.created.strftime("%Y-%m-%d"),
-        country=server.datacenter.location.country,
-        city=server.datacenter.location.city,
-        image=server.image.name or server.image.description,
+        country=server.datacenter.location.country if server.datacenter else "➖",
+        city=server.datacenter.location.city if server.datacenter else "➖",
+        image=(server.image.name or server.image.description) if server.image else "➖",
         created_day=(datetime.now(tz=timezone.utc) - server.created).days,
         disk=server.server_type.disk,
         snapshot=snapshot_count,
@@ -76,14 +76,7 @@ async def servers_info(
         price_hourly=price_hourly,
         price_monthly=price_monthly,
     )
-    try:
-        update = await callback_query.message.edit(
-            text=text, reply_markup=BotKB.servers_update(server=server, is_owner=dbuser.is_owner)
-        )
-    except Exception as e:
-        if "message is not modified" in str(e).lower():
-            await callback_query.answer()
-            return
-        await callback_query.answer(text=Dialogs.ACTIONS_FAILED, show_alert=True)
-        return
+    update = await callback_query.message.edit(
+        text=text, reply_markup=BotKB.servers_update(server=server, is_owner=dbuser.is_owner)
+    )
     return await UserMessage.clear(update, keep_current=True)
