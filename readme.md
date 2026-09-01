@@ -1,13 +1,23 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/hetznercloud/csi-driver/main/docs/img/hetzner_logo.png" width="100" alt="Hetzner Cloud">
-  <img src="https://img.shields.io/badge/⚙️-ServerManagerBot-blue" width="100" alt="ServerManagerBot">
+  <a href="https://www.hetzner.com/cloud">
+    <img src="https://raw.githubusercontent.com/hetznercloud/csi-driver/main/docs/img/hetzner_logo.png" width="120" alt="Hetzner Cloud">
+  </a>
 </p>
 
-<h1 align="center">ServerManagerBot</h1>
+<h1 align="center">
+  <img src="https://img.shields.io/badge/%E2%9A%99%EF%B8%8F-ServerManagerBot-0066cc?style=for-the-badge&logo=telegram&logoColor=white" alt="ServerManagerBot">
+</h1>
 
 <p align="center">
   <b>Full-stack Hetzner Cloud management via Telegram bot & CLI</b><br>
   <sub>Servers · Volumes · Floating IPs · Networks · Firewalls · Load Balancers · SSH Keys · Certificates · Placement Groups · Primary IPs · Snapshots</sub>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Hetzner-2C6EE0?style=flat&logo=hetzner&logoColor=white" alt="Hetzner">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat" alt="License">
 </p>
 
 ---
@@ -53,29 +63,7 @@ curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/insta
 sudo bash /opt/servermanagerbot/install.sh --update
 ```
 
-- Auto-backups `.env` and database before update
-- Runs Alembic migrations automatically
-- Rolls back on failure
-- Cleans up old Docker images
-
----
-
-## Manual Installation
-
-### Prerequisites
-- Docker & Docker Compose v2
-- Git
-
-### Steps
-
-```bash
-git clone https://github.com/Liwyd/ServerManagerBot.git /opt/servermanagerbot
-cd /opt/servermanagerbot
-cp .env.example .env   # or create manually
-nano .env
-docker compose pull
-docker compose up -d
-```
+> Auto-backups `.env` and database, runs migrations, rolls back on failure, cleans old Docker images.
 
 ---
 
@@ -96,6 +84,25 @@ docker compose up -d
 | `TELEGRAM_ADMINS_ID` | Yes | — | Comma-separated admin user IDs |
 | `TRAFFIC_MONITOR_ENABLED` | No | `false` | Enable traffic alerts |
 | `TRAFFIC_MONITOR_ALERT_PERCENT` | No | `80` | Alert threshold |
+
+---
+
+## Manual Installation
+
+### Prerequisites
+- Docker & Docker Compose v2
+- Git
+
+### Steps
+
+```bash
+git clone https://github.com/Liwyd/ServerManagerBot.git /opt/servermanagerbot
+cd /opt/servermanagerbot
+cp .env.example .env
+nano .env
+docker compose pull
+docker compose up -d
+```
 
 ---
 
@@ -185,20 +192,6 @@ Admins can be configured via `TELEGRAM_ADMINS_ID` in `.env` (env admins) or via 
 
 ---
 
-## Management
-
-```bash
-cd /opt/servermanagerbot
-
-docker compose logs -f          # View logs
-docker compose restart          # Restart
-docker compose down             # Stop
-docker compose ps               # Status
-sudo bash install.sh --update   # Update with backup
-```
-
----
-
 ## Backup & Restore
 
 ### Automatic
@@ -216,6 +209,20 @@ docker compose exec postgres pg_dump -U smbuser servermanagerbot > backup_$(date
 ### Restore
 ```bash
 cat backup_YYYYMMDD.sql | docker compose exec -T postgres psql -U smbuser
+```
+
+---
+
+## Management
+
+```bash
+cd /opt/servermanagerbot
+
+docker compose logs -f          # View logs
+docker compose restart          # Restart
+docker compose down             # Stop
+docker compose ps               # Status
+sudo bash install.sh --update   # Update with backup
 ```
 
 ---
