@@ -1,10 +1,10 @@
 from eiogram import Router
-from eiogram.types import CallbackQuery, Message
 from eiogram.filters import StateFilter, Text
-from eiogram.state import StateManager, State, StateGroup
+from eiogram.state import State, StateGroup, StateManager
+from eiogram.types import CallbackQuery, Message
 
 from src.db import AsyncSession
-from src.keys import BotKB, BotCB, AreaType, TaskType, StepType
+from src.keys import AreaType, BotCB, BotKB, StepType, TaskType
 from src.lang import Dialogs
 from src.utils.depends import GetHetzner, ShouldBeOwner
 
@@ -27,7 +27,7 @@ async def snapshots_update(
     __: ShouldBeOwner,
 ):
     kb = BotKB.snapshots_back(id=callback_data.target)
-    snapshot = hetzner.images.get_by_id(int(callback_data.target))
+    snapshot = await hetzner.get_image_by_id(int(callback_data.target))
     if not snapshot:
         return await callback_query.message.edit(text=Dialogs.SNAPSHOTS_NOT_FOUND, reply_markup=kb)
     match callback_data.step:
@@ -53,13 +53,13 @@ async def input_handler(
     state_data: dict,
     __: ShouldBeOwner,
 ):
-    snapshot = hetzner.images.get_by_id(int(state_data["target"]))
+    snapshot = await hetzner.get_image_by_id(int(state_data["target"]))
     if not snapshot:
         return await message.answer(text=Dialogs.SNAPSHOTS_NOT_FOUND)
 
     match state_data["step"]:
         case StepType.SNAPSHOTS_REMARK:
-            snapshot.update(description=message.text)
+            await hetzner.update_image(snapshot, description=message.text)
         case _:
             return await message.answer(text="Invalid step!", reply_markup=BotKB.snapshots_back(id=snapshot.id))
 
@@ -80,14 +80,14 @@ async def approval_handler(
     if not callback_data.is_approve:
         return await callback_query.message.edit(text=Dialogs.ACTIONS_CANCELLED, reply_markup=BotKB.snapshots_back())
 
-    snapshot = hetzner.images.get_by_id(int(state_data["target"]))
+    snapshot = await hetzner.get_image_by_id(int(state_data["target"]))
     if not snapshot:
         return await callback_query.answer(text=Dialogs.SNAPSHOTS_NOT_FOUND, show_alert=True)
 
     kb = BotKB.snapshots_back(id=snapshot.id)
     match state_data["step"]:
         case StepType.SNAPSHOTS_DELETE:
-            snapshot.delete()
+            await hetzner.delete_image(snapshot)
             kb = BotKB.snapshots_back()
 
     await state.clear_state(db=db)

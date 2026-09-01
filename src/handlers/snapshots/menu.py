@@ -1,11 +1,11 @@
 from eiogram import Router
-from eiogram.types import CallbackQuery
 from eiogram.filters import IgnoreStateFilter
+from eiogram.types import CallbackQuery
 
 from src.db import UserMessage
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
-from src.keys import BotKB, BotCB, AreaType, TaskType
-from src.utils.depends import GetHetzner, ClearState, ShouldBeOwner
+from src.utils.depends import ClearState, GetHetzner, ShouldBeOwner
 
 router = Router()
 
@@ -14,7 +14,7 @@ router = Router()
 async def snapshots_menu(
     callback_query: CallbackQuery, hetzner: GetHetzner, _: ClearState, __: ShouldBeOwner, state_data: dict
 ):
-    snapshots = hetzner.images.get_all(type="snapshot")
+    snapshots = await hetzner.get_images(type="snapshot")
     update = await callback_query.message.edit(
         text=Dialogs.SNAPSHOTS_MENU, reply_markup=BotKB.snapshots_menu(snapshots=snapshots)
     )

@@ -1,13 +1,13 @@
 from datetime import datetime, timezone
 
 from eiogram import Router
-from eiogram.types import CallbackQuery
 from eiogram.filters import IgnoreStateFilter
+from eiogram.types import CallbackQuery
 
 from src.db import UserMessage
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
-from src.keys import BotKB, BotCB, AreaType, TaskType
-from src.utils.depends import GetHetzner, ClearState, ShouldBeOwner
+from src.utils.depends import ClearState, GetHetzner, ShouldBeOwner
 
 router = Router()
 
@@ -16,7 +16,7 @@ router = Router()
 async def snapshots_info(
     callback_query: CallbackQuery, callback_data: BotCB, hetzner: GetHetzner, _: ClearState, __: ShouldBeOwner
 ):
-    snapshot = hetzner.images.get_by_id(int(callback_data.target))
+    snapshot = await hetzner.get_image_by_id(int(callback_data.target))
     if not snapshot:
         return await callback_query.message.edit(text=Dialogs.SNAPSHOTS_NOT_FOUND)
     update = await callback_query.message.edit(

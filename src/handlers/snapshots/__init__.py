@@ -1,5 +1,6 @@
 from eiogram import Router
-from . import menu, info, update, create
+
+from . import create, info, menu, update
 
 
 def setup_snapshots_handlers():

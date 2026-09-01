@@ -1,10 +1,10 @@
 from eiogram import Router
+from eiogram.filters import StateFilter, Text
+from eiogram.state import State, StateGroup, StateManager
 from eiogram.types import CallbackQuery, Message
-from eiogram.filters import Text, StateFilter
-from eiogram.state import StateManager, State, StateGroup
 
 from src.db import AsyncSession, UserMessage
-from src.keys import BotKB, BotCB, AreaType, TaskType
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
 from src.utils.depends import GetHetzner, ShouldBeOwner
 
@@ -20,7 +20,7 @@ class SnapshotCreateForm(StateGroup):
 async def snapshots_create(
     callback_query: CallbackQuery, db: AsyncSession, state: StateManager, hetzner: GetHetzner, __: ShouldBeOwner
 ):
-    servers = hetzner.servers.get_all()
+    servers = await hetzner.get_servers()
     if not servers:
         return await callback_query.answer(text=Dialogs.SNAPSHOTS_SERVERS_NOT_FOUND, show_alert=True)
     await state.upsert_context(db=db, state=SnapshotCreateForm.remark)
@@ -29,7 +29,7 @@ async def snapshots_create(
 
 @router.message(StateFilter(SnapshotCreateForm.remark), Text())
 async def remark_handler(message: Message, db: AsyncSession, state: StateManager, hetzner: GetHetzner, __: ShouldBeOwner):
-    servers = hetzner.servers.get_all()
+    servers = await hetzner.get_servers()
     if not servers:
         update = await message.answer(text=Dialogs.SNAPSHOTS_SERVERS_NOT_FOUND)
         return await UserMessage.clear(update)
@@ -51,16 +51,16 @@ async def server_handler(
     state_data: dict,
     __: ShouldBeOwner,
 ):
-    server = hetzner.servers.get_by_id(int(callback_data.target))
+    server = await hetzner.get_server_by_id(int(callback_data.target))
     if not server:
         return await callback_query.answer(text=Dialogs.SNAPSHOTS_SERVER_NOT_FOUND, show_alert=True)
 
     try:
-        snapshot = server.create_image(description=state_data["remark"], type="snapshot")
+        response = await hetzner.create_server_image(server, description=state_data["remark"], type="snapshot")
     except Exception:
         return await callback_query.answer(text=Dialogs.ACTIONS_FAILED, show_alert=True)
 
     await state.clear_state(db=db)
     return await callback_query.message.edit(
-        text=Dialogs.SNAPSHOTS_CREATE_SUCCESS, reply_markup=BotKB.snapshots_back(snapshot.image.id)
+        text=Dialogs.SNAPSHOTS_CREATE_SUCCESS, reply_markup=BotKB.snapshots_back(response.image.id)
     )
