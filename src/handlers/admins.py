@@ -19,6 +19,7 @@ async def admins_list(message: Message, db: AsyncSession, dbuser: User):
         return await message.answer("Access Denied")
 
     from src.config import TELEGRAM_ADMINS_ID
+
     all_admin_ids = set(TELEGRAM_ADMINS_ID)
     db_admin_ids = await Admin.get_all_user_ids(db)
     all_admin_ids.update(db_admin_ids)
@@ -77,6 +78,7 @@ async def remove_admin_command(message: Message, db: AsyncSession, dbuser: User)
         return await message.answer("Invalid user ID.")
 
     from src.config import TELEGRAM_ADMINS_ID
+
     if target_id in TELEGRAM_ADMINS_ID:
         return await message.answer("Cannot remove env-configured admin. Edit .env instead.")
 

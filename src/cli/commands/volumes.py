@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -22,11 +26,17 @@ async def list_volumes(client):
     rows = []
     for v in vols:
         server = v.server.name if v.server else "—"
-        rows.append([
-            str(v.id), v.name, f"{v.size}GB", v.status, server,
-            v.location.city if v.location else "—",
-            v.created.strftime("%Y-%m-%d"),
-        ])
+        rows.append(
+            [
+                str(v.id),
+                v.name,
+                f"{v.size}GB",
+                v.status,
+                server,
+                v.location.city if v.location else "—",
+                v.created.strftime("%Y-%m-%d"),
+            ]
+        )
     print_table("Volumes", ["ID", "Name", "Size", "Status", "Server", "Location", "Created"], rows)
 
 

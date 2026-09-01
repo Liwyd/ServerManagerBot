@@ -47,13 +47,14 @@ def status(client):
             ssh_keys = await hetzner.get_ssh_keys()
 
             console.print("\n[bold green]Connection: OK[/bold green]")
-            print_panel("Account Summary",
+            print_panel(
+                "Account Summary",
                 f"Servers: [cyan]{len(servers)}[/cyan] | "
                 f"Primary IPs: [cyan]{len(ips)}[/cyan] | "
                 f"Volumes: [cyan]{len(volumes)}[/cyan] | "
                 f"Networks: [cyan]{len(networks)}[/cyan] | "
                 f"SSH Keys: [cyan]{len(ssh_keys)}[/cyan]",
-                style="green"
+                style="green",
             )
         except Exception as e:
             console.print(f"\n[bold red]Connection: FAILED[/bold red]")
@@ -63,54 +64,116 @@ def status(client):
 
 
 from src.cli.commands.servers import (
-    list_servers, get_servers, create_servers, delete_servers,
-    power_on_servers, power_off_servers, reboot_servers, reset_servers,
-    rebuild_servers, rename_servers, reset_password_servers, upgrade_servers,
-    snapshots_servers, console_servers,
+    list_servers,
+    get_servers,
+    create_servers,
+    delete_servers,
+    power_on_servers,
+    power_off_servers,
+    reboot_servers,
+    reset_servers,
+    rebuild_servers,
+    rename_servers,
+    reset_password_servers,
+    upgrade_servers,
+    snapshots_servers,
+    console_servers,
 )
 from src.cli.commands.volumes import (
-    list_volumes, get_volumes, create_volumes, delete_volumes,
-    resize_volumes, attach_volumes, detach_volumes, rename_volumes,
+    list_volumes,
+    get_volumes,
+    create_volumes,
+    delete_volumes,
+    resize_volumes,
+    attach_volumes,
+    detach_volumes,
+    rename_volumes,
 )
 from src.cli.commands.floating_ips import (
-    list_floating_ips, get_floating_ips, create_floating_ips, delete_floating_ips,
-    assign_floating_ips, unassign_floating_ips, rename_floating_ips, set_dns_floating_ips,
+    list_floating_ips,
+    get_floating_ips,
+    create_floating_ips,
+    delete_floating_ips,
+    assign_floating_ips,
+    unassign_floating_ips,
+    rename_floating_ips,
+    set_dns_floating_ips,
 )
 from src.cli.commands.networks import (
-    list_networks, get_networks, create_networks, delete_networks,
-    rename_networks, add_subnet_networks, remove_subnet_networks,
-    add_route_networks, remove_route_networks,
+    list_networks,
+    get_networks,
+    create_networks,
+    delete_networks,
+    rename_networks,
+    add_subnet_networks,
+    remove_subnet_networks,
+    add_route_networks,
+    remove_route_networks,
 )
 from src.cli.commands.firewalls import (
-    list_firewalls, get_firewalls, create_firewalls, delete_firewalls,
-    rename_firewalls, apply_firewalls, remove_firewalls,
+    list_firewalls,
+    get_firewalls,
+    create_firewalls,
+    delete_firewalls,
+    rename_firewalls,
+    apply_firewalls,
+    remove_firewalls,
 )
 from src.cli.commands.load_balancers import (
-    list_load_balancers, get_load_balancers, create_load_balancers,
-    delete_load_balancers, rename_load_balancers,
-    add_target_load_balancers, remove_target_load_balancers,
+    list_load_balancers,
+    get_load_balancers,
+    create_load_balancers,
+    delete_load_balancers,
+    rename_load_balancers,
+    add_target_load_balancers,
+    remove_target_load_balancers,
 )
 from src.cli.commands.ssh_keys import (
-    list_ssh_keys, get_ssh_keys, create_ssh_keys, delete_ssh_keys, rename_ssh_keys,
+    list_ssh_keys,
+    get_ssh_keys,
+    create_ssh_keys,
+    delete_ssh_keys,
+    rename_ssh_keys,
 )
 from src.cli.commands.certificates import (
-    list_certificates, get_certificates, create_certificates,
-    create_managed_certificates, delete_certificates, rename_certificates,
+    list_certificates,
+    get_certificates,
+    create_certificates,
+    create_managed_certificates,
+    delete_certificates,
+    rename_certificates,
 )
 from src.cli.commands.placement_groups import (
-    list_placement_groups, get_placement_groups, create_placement_groups,
-    delete_placement_groups, rename_placement_groups,
+    list_placement_groups,
+    get_placement_groups,
+    create_placement_groups,
+    delete_placement_groups,
+    rename_placement_groups,
 )
 from src.cli.commands.primary_ips import (
-    list_primary_ips, get_primary_ips, create_primary_ips, delete_primary_ips,
-    assign_primary_ips, unassign_primary_ips, rename_primary_ips, set_dns_primary_ips,
+    list_primary_ips,
+    get_primary_ips,
+    create_primary_ips,
+    delete_primary_ips,
+    assign_primary_ips,
+    unassign_primary_ips,
+    rename_primary_ips,
+    set_dns_primary_ips,
 )
 from src.cli.commands.snapshots import (
-    list_snapshots, get_snapshots, delete_snapshots, rename_snapshots,
+    list_snapshots,
+    get_snapshots,
+    delete_snapshots,
+    rename_snapshots,
 )
 from src.cli.commands.clients import (
-    list_clients, get_clients, add_clients, delete_clients,
-    rename_clients, change_token_clients, test_clients,
+    list_clients,
+    get_clients,
+    add_clients,
+    delete_clients,
+    rename_clients,
+    change_token_clients,
+    test_clients,
 )
 
 

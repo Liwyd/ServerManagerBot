@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, print_table, print_panel, confirm_action,
+    console,
+    async_command,
+    print_table,
+    print_panel,
+    confirm_action,
 )
 from src.config import SQLALCHEMY_DATABASE_URL
 from src.db.core import AsyncSessionLocal

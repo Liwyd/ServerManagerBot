@@ -103,6 +103,7 @@ class User(Base):
         if user_id in TELEGRAM_ADMINS_ID:
             return True
         from ._admin import Admin
+
         admin = await Admin.get_by_user_id(db, user_id)
         return admin is not None
 

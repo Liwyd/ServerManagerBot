@@ -17,9 +17,7 @@ async def start_handler(message: Message, db: AsyncSession, state: StateManager,
     admin = await User.is_admin(db, dbuser.id)
     if not admin:
         clients = [client for client in clients if client.id in dbuser.client_ids()]
-    update = await message.answer(
-        text=Dialogs.COMMAND_START, reply_markup=BotKB.home(clients=clients, is_owner=admin)
-    )
+    update = await message.answer(text=Dialogs.COMMAND_START, reply_markup=BotKB.home(clients=clients, is_owner=admin))
     return await UserMessage.clear(update)
 
 

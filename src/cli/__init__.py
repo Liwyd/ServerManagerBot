@@ -21,6 +21,7 @@ def async_command(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         asyncio.run(f(*args, **kwargs))
+
     return wrapper
 
 

@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -21,11 +25,15 @@ async def list_load_balancers(client):
 
     rows = []
     for lb in lbs:
-        rows.append([
-            str(lb.id), lb.name, lb.lb_type.name if lb.lb_type else "—",
-            lb.public_net.ipv4.ip if lb.public_net and lb.public_net.ipv4 else "—",
-            lb.location.city if lb.location else "—",
-        ])
+        rows.append(
+            [
+                str(lb.id),
+                lb.name,
+                lb.lb_type.name if lb.lb_type else "—",
+                lb.public_net.ipv4.ip if lb.public_net and lb.public_net.ipv4 else "—",
+                lb.location.city if lb.location else "—",
+            ]
+        )
     print_table("Load Balancers", ["ID", "Name", "Type", "IPv4", "Location"], rows)
 
 

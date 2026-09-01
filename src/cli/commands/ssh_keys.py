@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -55,6 +59,7 @@ async def get_ssh_keys(key_id, client):
 async def create_ssh_keys(name, public_key, client):
     """Add an SSH key."""
     import os
+
     if os.path.isfile(public_key):
         with open(public_key) as f:
             public_key = f.read().strip()

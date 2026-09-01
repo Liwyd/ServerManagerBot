@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -28,15 +32,17 @@ async def list_servers(client, fmt):
     rows = []
     for s in servers:
         ip = s.public_net.ipv4.ip if s.public_net.ipv4 else "—"
-        rows.append([
-            str(s.id),
-            s.name,
-            s.status,
-            ip,
-            s.server_type.name,
-            s.datacenter.location.city if s.datacenter else "—",
-            s.created.strftime("%Y-%m-%d"),
-        ])
+        rows.append(
+            [
+                str(s.id),
+                s.name,
+                s.status,
+                ip,
+                s.server_type.name,
+                s.datacenter.location.city if s.datacenter else "—",
+                s.created.strftime("%Y-%m-%d"),
+            ]
+        )
     print_table("Servers", ["ID", "Name", "Status", "IPv4", "Type", "Location", "Created"], rows, expand=True)
 
 

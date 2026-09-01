@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -37,11 +41,7 @@ async def get_placement_groups(pg_id, client):
         console.print(f"[red]Placement group {pg_id} not found[/red]")
         return
 
-    content = (
-        f"[bold]Name:[/bold] {pg.name}\n"
-        f"[bold]ID:[/bold] {pg.id}\n"
-        f"[bold]Type:[/bold] {pg.type}\n"
-    )
+    content = f"[bold]Name:[/bold] {pg.name}\n[bold]ID:[/bold] {pg.id}\n[bold]Type:[/bold] {pg.type}\n"
     print_panel(f"Placement Group {pg.id}", content)
 
 

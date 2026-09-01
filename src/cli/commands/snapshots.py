@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -22,10 +26,15 @@ async def list_snapshots(client):
     rows = []
     for s in images:
         created_from = s.created_from.name if s.created_from else "—"
-        rows.append([
-            str(s.id), s.name or "—", s.status, created_from,
-            s.created.strftime("%Y-%m-%d"),
-        ])
+        rows.append(
+            [
+                str(s.id),
+                s.name or "—",
+                s.status,
+                created_from,
+                s.created.strftime("%Y-%m-%d"),
+            ]
+        )
     print_table("Snapshots", ["ID", "Name", "Status", "Created From", "Created"], rows)
 
 

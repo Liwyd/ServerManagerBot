@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -22,10 +26,15 @@ async def list_networks(client):
     rows = []
     for n in nets:
         subnets = len(n.subnets) if n.subnets else 0
-        rows.append([
-            str(n.id), n.name, n.ip_range, str(subnets),
-            n.created.strftime("%Y-%m-%d"),
-        ])
+        rows.append(
+            [
+                str(n.id),
+                n.name,
+                n.ip_range,
+                str(subnets),
+                n.created.strftime("%Y-%m-%d"),
+            ]
+        )
     print_table("Networks", ["ID", "Name", "IP Range", "Subnets", "Created"], rows)
 
 

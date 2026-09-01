@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -21,10 +25,14 @@ async def list_firewalls(client):
 
     rows = []
     for fw in fws:
-        rows.append([
-            str(fw.id), fw.name, str(len(fw.rules)) if fw.rules else "0",
-            fw.created.strftime("%Y-%m-%d"),
-        ])
+        rows.append(
+            [
+                str(fw.id),
+                fw.name,
+                str(len(fw.rules)) if fw.rules else "0",
+                fw.created.strftime("%Y-%m-%d"),
+            ]
+        )
     print_table("Firewalls", ["ID", "Name", "Rules", "Created"], rows)
 
 

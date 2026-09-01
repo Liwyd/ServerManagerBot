@@ -115,7 +115,8 @@ async def image_handler(
         image=image_name,
     )
     await state.upsert_context(
-        db=db, state=ServerCreateForm.confirm,
+        db=db,
+        state=ServerCreateForm.confirm,
         image_id=str(image.id),
         server_type_id=str(server_type.id),
         datacenter_id=str(datacenter.id),

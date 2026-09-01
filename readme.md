@@ -1,32 +1,45 @@
-# ServerManagerBot
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hetznercloud/csi-driver/main/docs/img/hetzner_logo.png" width="100" alt="Hetzner Cloud">
+  <img src="https://img.shields.io/badge/⚙️-ServerManagerBot-blue" width="100" alt="ServerManagerBot">
+</p>
 
-Telegram bot for managing Hetzner Cloud resources.
+<h1 align="center">ServerManagerBot</h1>
+
+<p align="center">
+  <b>Full-stack Hetzner Cloud management via Telegram bot & CLI</b><br>
+  <sub>Servers · Volumes · Floating IPs · Networks · Firewalls · Load Balancers · SSH Keys · Certificates · Placement Groups · Primary IPs · Snapshots</sub>
+</p>
+
+---
 
 ## Features
 
 ### Compute
-- **Servers**: Create, reboot, rebuild, power on/off, rename, upgrade, reset password, and delete
-- **Snapshots**: Create, restore, delete, and rename snapshots
-- **Placement Groups**: Create, rename, and delete placement groups
+- **Servers** — Create, power on/off, reboot, rebuild, reset, reset password, upgrade, rename, delete
+- **Snapshots** — Create, restore, delete, rename
+- **Placement Groups** — Create, rename, delete
 
 ### Networking
-- **Primary IPs**: Create, assign, unassign, rename, and delete primary IPs (IPv4/IPv6)
-- **Floating IPs**: Create, assign, unassign, rename, change reverse DNS, and delete
-- **Networks**: Create, rename, add/remove subnets, add/remove routes, and delete
-- **Firewalls**: Create, rename, apply to servers, remove from servers, and delete
-- **Load Balancers**: Create, rename, add/remove targets, and delete
+- **Primary IPs** — Create, assign/unassign, rename, reverse DNS, delete
+- **Floating IPs** — Create, assign/unassign, reverse DNS, rename, delete
+- **Networks** — Create, add/remove subnets, add/remove routes, rename, delete
+- **Firewalls** — Create, apply to servers, remove from servers, rename, delete
+- **Load Balancers** — Create, add/remove targets, rename, delete
 
 ### Storage
-- **Volumes**: Create, attach to servers, detach, resize, rename, and delete
+- **Volumes** — Create, attach, detach, resize, rename, delete
 
 ### Security
-- **SSH Keys**: Add, rename, and delete SSH keys
-- **Certificates**: Upload custom or create managed SSL certificates, rename, and delete
+- **SSH Keys** — Add, rename, delete
+- **Certificates** — Upload custom or managed (Let's Encrypt), rename, delete
 
 ### Management
-- **Multi-client support**: Add multiple Hetzner API tokens, manage per-client server access
-- **Traffic Monitoring**: Hourly checks that alert admins when server traffic exceeds threshold
-- **Access Control**: Grant/revoke server access to specific Telegram users per client
+- **Multi-client** — Multiple Hetzner API tokens with per-client access control
+- **Multi-admin** — Env-based + bot-managed admin system
+- **Traffic Monitoring** — Hourly checks with configurable alert threshold
+- **Access Control** — Grant/revoke server access to specific Telegram users per client
+
+---
 
 ## Quick Install
 
@@ -34,147 +47,200 @@ Telegram bot for managing Hetzner Cloud resources.
 curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
 ```
 
-The installer will:
-- Install Docker if not present
-- Pull the pre-built image from Docker Hub (`liwyd/servermanagerbot`)
-- Create configuration with generated secure passwords
-- Start all services
-
 ## Updating
 
 ```bash
 sudo bash /opt/servermanagerbot/install.sh --update
 ```
 
-The updater will:
-- Back up your `.env` file and database automatically
-- Pull the latest image
-- Run database migrations
-- Restart services with zero downtime
-- Clean up old Docker images
-- Roll back automatically if anything fails
+- Auto-backups `.env` and database before update
+- Runs Alembic migrations automatically
+- Rolls back on failure
+- Cleans up old Docker images
 
-### What the backup includes
-- `.env` file copy
-- Full PostgreSQL database dump
-- Backups stored in `/opt/servermanagerbot/backups/` (last 5 kept)
-
-### Manual update (alternative)
-
-```bash
-cd /opt/servermanagerbot
-sudo bash install.sh --update
-```
+---
 
 ## Manual Installation
 
 ### Prerequisites
-
-- Docker and Docker Compose v2
+- Docker & Docker Compose v2
 - Git
 
 ### Steps
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Liwyd/ServerManagerBot.git /opt/servermanagerbot
-   cd /opt/servermanagerbot
-   ```
+```bash
+git clone https://github.com/Liwyd/ServerManagerBot.git /opt/servermanagerbot
+cd /opt/servermanagerbot
+cp .env.example .env   # or create manually
+nano .env
+docker compose pull
+docker compose up -d
+```
 
-2. Create your `.env` file:
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
-
-3. Configure the required variables:
-   - `TELEGRAM_API_TOKEN` - Your bot token from @BotFather
-   - `TELEGRAM_ADMINS_ID` - Your Telegram user ID
-   - `DATABASE_PASSWORD` - Database password (generate a strong one)
-   - `POSTGRES_PASSWORD` - Must match `DATABASE_PASSWORD`
-
-4. Pull and start the services:
-   ```bash
-   docker compose pull
-   docker compose up -d
-   ```
+---
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_USERNAME` | Yes | `smbuser` | PostgreSQL username |
-| `DATABASE_PASSWORD` | Yes | - | PostgreSQL password |
-| `DATABASE_NAME` | Yes | `servermanagerbot` | PostgreSQL database name |
+| `DATABASE_PASSWORD` | Yes | — | PostgreSQL password |
+| `DATABASE_NAME` | Yes | `servermanagerbot` | PostgreSQL database |
 | `DATABASE_HOST` | Yes | `localhost` | PostgreSQL host |
 | `DATABASE_PORT` | Yes | `5432` | PostgreSQL port |
-| `POSTGRES_DB` | Yes | `servermanagerbot` | PostgreSQL container database |
-| `POSTGRES_USER` | Yes | `smbuser` | PostgreSQL container user |
-| `POSTGRES_PASSWORD` | Yes | - | PostgreSQL container password (must match DATABASE_PASSWORD) |
-| `PGPORT` | No | `5432` | PostgreSQL container port |
-| `TELEGRAM_API_TOKEN` | Yes | - | Telegram bot token |
-| `TELEGRAM_ADMINS_ID` | Yes | - | Comma-separated admin user IDs |
-| `TRAFFIC_MONITOR_ENABLED` | No | `false` | Enable traffic monitoring |
-| `TRAFFIC_MONITOR_ALERT_PERCENT` | No | `80` | Alert threshold percentage |
+| `POSTGRES_DB` | Yes | `servermanagerbot` | Container database |
+| `POSTGRES_USER` | Yes | `smbuser` | Container user |
+| `POSTGRES_PASSWORD` | Yes | — | Container password |
+| `PGPORT` | No | `5432` | Container port |
+| `TELEGRAM_API_TOKEN` | Yes | — | Bot token from @BotFather |
+| `TELEGRAM_ADMINS_ID` | Yes | — | Comma-separated admin user IDs |
+| `TRAFFIC_MONITOR_ENABLED` | No | `false` | Enable traffic alerts |
+| `TRAFFIC_MONITOR_ALERT_PERCENT` | No | `80` | Alert threshold |
+
+---
+
+## CLI (`hserver`)
+
+Full-featured terminal CLI for managing all Hetzner resources.
+
+### Setup
+```bash
+cd /opt/servermanagerbot
+uv sync --group cli
+```
+
+### Usage
+```bash
+hserver --help
+hserver status                          # Connection status & summary
+
+hserver servers list                    # List all servers
+hserver servers get <id>                # Server details
+hserver servers create -n my -t cx22 -i ubuntu-22.04
+hserver servers power-on <id>
+hserver servers power-off <id>
+hserver servers reboot <id>
+hserver servers rebuild <id> -i ubuntu-24.04
+hserver servers rename <id> -n new-name
+hserver servers upgrade <id> -t cpx31
+hserver servers reset-password <id>
+hserver servers delete <id> -y
+
+hserver volumes list
+hserver volumes create -n data -s 50
+hserver volumes attach <vol_id> <server_id>
+hserver volumes detach <id>
+hserver volumes resize <id> -s 100
+hserver volumes delete <id> -y
+
+hserver floating-ips list
+hserver floating-ips create -t ipv4
+hserver floating-ips assign <ip_id> <server_id>
+hserver floating-ips unassign <id>
+hserver floating-ips set-dns <id> -i 1.2.3.4 -d example.com
+
+hserver networks list
+hserver networks create -n my-net -r 10.0.0.0/16
+hserver networks add-subnet <id> -t cloud -r 10.0.1.0/24 -z fsn1
+hserver networks add-route <id> -d 10.100.0.0/16 -g 10.0.0.1
+
+hserver firewalls list
+hserver firewalls apply <fw_id> <server_id>
+hserver firewalls remove <fw_id> <server_id>
+
+hserver load-balancers list
+hserver load-balancers add-target <lb_id> <server_id>
+hserver load-balancers remove-target <lb_id> <server_id>
+
+hserver ssh-keys list
+hserver ssh-keys create -n my-key -k ~/.ssh/id_ed25519.pub
+
+hserver certificates list
+hserver certificates create -n cert --cert-file cert.pem --key-file key.pem
+hserver certificates create-managed -n cert -d example.com -d *.example.com
+
+hserver placement-groups list
+hserver primary-ips list
+hserver snapshots list
+
+hserver clients list
+hserver clients add -n prod -t <hetzner-api-token>
+hserver clients test <id>
+```
+
+All commands support `--client <id>` to target a specific client.
+
+---
+
+## Admin Commands
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Start/restart the bot |
+| `/admins` | List all admins |
+| `/addadmin <user_id>` | Add a bot-managed admin |
+| `/rmadmin <user_id>` | Remove a bot-managed admin |
+
+Admins can be configured via `TELEGRAM_ADMINS_ID` in `.env` (env admins) or via `/addadmin` (bot admins). Env admins cannot be removed via bot.
+
+---
 
 ## Management
 
 ```bash
 cd /opt/servermanagerbot
 
-# View logs
-docker compose logs -f
-
-# Restart services
-docker compose restart
-
-# Stop services
-docker compose down
-
-# Update (with backup and rollback)
-sudo bash install.sh --update
-
-# Check status
-docker compose ps
+docker compose logs -f          # View logs
+docker compose restart          # Restart
+docker compose down             # Stop
+docker compose ps               # Status
+sudo bash install.sh --update   # Update with backup
 ```
 
-## Data Storage
+---
 
-- PostgreSQL data: Docker volume `servermanagerbot_postgres_data`
-- Configuration: `/opt/servermanagerbot/.env`
-- Backups: `/opt/servermanagerbot/backups/`
+## Backup & Restore
 
-## Backup
+### Automatic
+The update script creates backups at `/opt/servermanagerbot/backups/`:
+- `.env` file
+- Full PostgreSQL dump
 
+Last 5 backups are kept.
+
+### Manual Backup
 ```bash
-# Using the install script
-sudo bash install.sh --update  # Creates backup automatically
-
-# Manual backup
-docker compose exec postgres pg_dumpall -U smbuser > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump -U smbuser servermanagerbot > backup_$(date +%Y%m%d).sql
 ```
 
-## Restore
-
+### Restore
 ```bash
 cat backup_YYYYMMDD.sql | docker compose exec -T postgres psql -U smbuser
 ```
 
+---
+
 ## Architecture
 
-- **ServerManagerBot**: Python 3.11 async Telegram bot (eiogram + SQLAlchemy + asyncpg)
-- **PostgreSQL 15**: Database backend
-- Both services use host networking on configurable ports
+```
+┌─────────────────────┐     ┌──────────────────┐
+│   Telegram Bot      │────▶│   PostgreSQL 15   │
+│   (eiogram + async) │     │   (asyncpg)       │
+└────────┬────────────┘     └──────────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│   Hetzner Cloud API │
+│   (hcloud SDK)      │
+└─────────────────────┘
+```
 
-## Tech Stack
+- **Bot**: Python 3.11, asyncio, eiogram 2.0, SQLAlchemy 2.0
+- **CLI**: click + rich for terminal UI
+- **API**: hcloud 2.5.4 (async-wrapped)
+- **Deploy**: Docker Compose, host networking
 
-- Python 3.11+ with asyncio
-- Telegram Bot via eiogram
-- Hetzner Cloud API via hcloud
-- PostgreSQL with asyncpg + SQLAlchemy
-- Alembic for database migrations
-- APScheduler for cron tasks
-- Docker for deployment
+---
 
 ## License
 

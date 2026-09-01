@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -22,10 +26,17 @@ async def list_floating_ips(client):
     rows = []
     for ip in ips:
         server = ip.server.name if ip.server else "—"
-        rows.append([
-            str(ip.id), ip.name or "—", ip.ip, ip.type, ip.blocked,
-            server, ip.home_location.city if ip.home_location else "—",
-        ])
+        rows.append(
+            [
+                str(ip.id),
+                ip.name or "—",
+                ip.ip,
+                ip.type,
+                ip.blocked,
+                server,
+                ip.home_location.city if ip.home_location else "—",
+            ]
+        )
     print_table("Floating IPs", ["ID", "Name", "IP", "Type", "Blocked", "Server", "Location"], rows)
 
 

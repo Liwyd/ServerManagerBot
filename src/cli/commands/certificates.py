@@ -3,7 +3,11 @@ import asyncio
 import click
 
 from src.cli import (
-    console, async_command, get_hetzner, print_table, print_panel,
+    console,
+    async_command,
+    get_hetzner,
+    print_table,
+    print_panel,
     confirm_action,
 )
 
@@ -21,11 +25,15 @@ async def list_certificates(client):
 
     rows = []
     for c in certs:
-        rows.append([
-            str(c.id), c.name, c.type,
-            c.created.strftime("%Y-%m-%d"),
-            c.not_valid_after.strftime("%Y-%m-%d") if c.not_valid_after else "—",
-        ])
+        rows.append(
+            [
+                str(c.id),
+                c.name,
+                c.type,
+                c.created.strftime("%Y-%m-%d"),
+                c.not_valid_after.strftime("%Y-%m-%d") if c.not_valid_after else "—",
+            ]
+        )
     print_table("Certificates", ["ID", "Name", "Type", "Created", "Expires"], rows)
 
 
@@ -60,6 +68,7 @@ async def get_certificates(cert_id, client):
 async def create_certificates(name, cert_file, key_file, client):
     """Upload a certificate."""
     import os
+
     if not os.path.isfile(cert_file):
         console.print(f"[red]Certificate file not found: {cert_file}[/red]")
         return
