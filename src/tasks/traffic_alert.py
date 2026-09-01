@@ -1,17 +1,16 @@
 import logging
 from typing import List
 
-from hcloud import Client as HCloudClient
-
-from src.db import GetDB, Client
-from src.config import TELEGRAM_ADMINS_ID, BOT, TRAFFIC_MONITOR_ALERT_PERCENT
+from src.config import BOT, TELEGRAM_ADMINS_ID, TRAFFIC_MONITOR_ALERT_PERCENT
+from src.db import Client, GetDB
 from src.lang import Dialogs
+from src.utils.async_hetzner import AsyncHetznerClient
 
 logger = logging.getLogger(__name__)
 
 
-async def _fetch_usage(hclient: HCloudClient) -> List[dict]:
-    servers = hclient.servers.get_all()
+async def _fetch_usage(hclient: AsyncHetznerClient) -> List[dict]:
+    servers = await hclient.get_servers()
     usage: List[dict] = []
     for srv in servers:
         outgoing_gb = round(((srv.outgoing_traffic or 0) / 1024**3), 3)
@@ -39,7 +38,7 @@ async def check_traffic_alerts():
 
     for client in clients:
         try:
-            hclient = HCloudClient(token=client.secret)
+            hclient = AsyncHetznerClient(token=client.secret)
             usage = await _fetch_usage(hclient)
             for item in usage:
                 percent = item["percent"]
