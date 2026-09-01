@@ -1,12 +1,10 @@
-import asyncio
-
 from eiogram import Router
-from eiogram.types import CallbackQuery, Message
 from eiogram.filters import StateFilter, Text
-from eiogram.state import StateManager, State, StateGroup
+from eiogram.state import State, StateGroup, StateManager
+from eiogram.types import CallbackQuery, Message
 
 from src.db import AsyncSession
-from src.keys import BotKB, BotCB, AreaType, TaskType, StepType
+from src.keys import AreaType, BotCB, BotKB, StepType, TaskType
 from src.lang import Dialogs
 from src.utils.depends import GetHetzner, ShouldBeOwner
 
@@ -29,7 +27,7 @@ async def primary_ips_update(
     __: ShouldBeOwner,
 ):
     kb = BotKB.primary_ips_back(id=callback_data.target)
-    primary_ip = hetzner.primary_ips.get_by_id(int(callback_data.target))
+    primary_ip = await hetzner.get_primary_ip_by_id(int(callback_data.target))
     if not primary_ip:
         return await callback_query.message.edit(text=Dialogs.PRIMARY_IP_NOT_FOUND, reply_markup=kb)
     match callback_data.step:
@@ -41,7 +39,7 @@ async def primary_ips_update(
             text = Dialogs.PRIMARY_IP_ENTER_REMARK
             _state = PrimaryUpdateForm.input
         case StepType.PRIMARY_IPS_ASSIGN:
-            servers = hetzner.servers.get_all()
+            servers = await hetzner.get_servers()
             if not servers:
                 return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
             filtered_servers = [s for s in servers if not s.public_net.ipv4]
@@ -65,13 +63,13 @@ async def input_handler(
     state_data: dict,
     __: ShouldBeOwner,
 ):
-    primary_ip = hetzner.primary_ips.get_by_id(int(state_data["target"]))
+    primary_ip = await hetzner.get_primary_ip_by_id(int(state_data["target"]))
     if not primary_ip:
         return await message.answer(text=Dialogs.PRIMARY_IP_NOT_FOUND)
 
     match state_data["step"]:
         case StepType.PRIMARY_IPS_REMARK:
-            primary_ip.update(name=message.text)
+            await hetzner.update_primary_ip(primary_ip, name=message.text)
         case _:
             return await message.answer(text="Invalid step!", reply_markup=BotKB.primary_ips_back(id=primary_ip.id))
 
@@ -92,26 +90,25 @@ async def approval_handler(
     if not callback_data.is_approve:
         return await callback_query.message.edit(text=Dialogs.ACTIONS_CANCELLED, reply_markup=BotKB.primary_ips_back())
 
-    primary_ip = hetzner.primary_ips.get_by_id(int(state_data["target"]))
+    primary_ip = await hetzner.get_primary_ip_by_id(int(state_data["target"]))
     if not primary_ip:
         return await callback_query.answer(text=Dialogs.PRIMARY_IP_NOT_FOUND, show_alert=True)
 
     kb = BotKB.primary_ips_back(id=primary_ip.id)
     match state_data["step"]:
         case StepType.PRIMARY_IPS_DELETE:
-            primary_ip.delete()
+            await hetzner.delete_primary_ip(primary_ip)
             kb = BotKB.primary_ips_back()
         case StepType.PRIMARY_IPS_UNASSIGN:
             await callback_query.message.edit(text=Dialogs.ACTIONS_WAITING)
             if not primary_ip.assignee_id:
                 return await callback_query.answer(text=Dialogs.PRIMARY_IP_ASSIGNEE_NOT_FOUND, show_alert=True)
-            server = hetzner.servers.get_by_id(int(primary_ip.assignee_id))
+            server = await hetzner.get_server_by_id(int(primary_ip.assignee_id))
             if not server:
                 return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
             if server.status != "off":
-                server.power_off()
-            await asyncio.sleep(2)
-            primary_ip.unassign()
+                await hetzner.power_off_server(server)
+            await hetzner.unassign_primary_ip(primary_ip)
 
     await state.clear_state(db=db)
     return await callback_query.message.edit(text=Dialogs.PRIMARY_IPS_UPDATE_SUCCESS, reply_markup=kb)
@@ -127,16 +124,15 @@ async def select_handler(
     state_data: dict,
     __: ShouldBeOwner,
 ):
-    primary_ip = hetzner.primary_ips.get_by_id(int(state_data["target"]))
+    primary_ip = await hetzner.get_primary_ip_by_id(int(state_data["target"]))
     if not primary_ip:
         return await callback_query.answer(text=Dialogs.PRIMARY_IP_NOT_FOUND, show_alert=True)
 
-    server = hetzner.servers.get_by_id(int(callback_data.target))
+    server = await hetzner.get_server_by_id(int(callback_data.target))
     if not server:
         return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
 
-    primary_ip.assign(assignee_id=server.id, assignee_type="server")
-    await asyncio.sleep(2)
+    await hetzner.assign_primary_ip(primary_ip, assignee_id=server.id, assignee_type="server")
 
     await state.clear_state(db=db)
     return await callback_query.message.edit(
