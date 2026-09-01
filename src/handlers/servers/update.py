@@ -79,7 +79,9 @@ async def servers_update(
         case StepType.SERVERS_REBUILD:
             text = Dialogs.SERVERS_REBUILD_CONFIRM
             _state = ServerUpdateForm.image
-            images = await hetzner.get_images(type=["system", "snapshot"], architecture=server.image.architecture if server.image else None)
+            images = await hetzner.get_images(
+                type=["system", "snapshot"], architecture=server.image.architecture if server.image else None
+            )
             if not images:
                 return await callback_query.answer(text=Dialogs.SERVERS_IMAGES_NOT_FOUND, show_alert=True)
             images.sort(key=lambda x: x.name or x.description)
