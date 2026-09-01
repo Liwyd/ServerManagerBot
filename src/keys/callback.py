@@ -1,4 +1,5 @@
 from enum import StrEnum
+
 from eiogram.utils.callback_data import CallbackData
 
 
@@ -8,6 +9,14 @@ class AreaType(StrEnum):
     SNAPSHOT = "ss"
     PRIMARY_IP = "pi"
     SERVER = "sv"
+    VOLUME = "vl"
+    FLOATING_IP = "fi"
+    NETWORK = "nw"
+    FIREWALL = "fw"
+    LOAD_BALANCER = "lb"
+    SSH_KEY = "sk"
+    CERTIFICATE = "ce"
+    PLACEMENT_GROUP = "pg"
 
 
 class TaskType(StrEnum):
@@ -47,6 +56,36 @@ class StepType(StrEnum):
     PRIMARY_IPS_UNASSIGN = "pua"
     PRIMARY_IPS_REMARK = "pir"
     PRIMARY_IPS_DELETE = "pid"
+    VOLUMES_REMARK = "vrm"
+    VOLUMES_DELETE = "vdl"
+    VOLUMES_RESIZE = "vrz"
+    VOLUMES_ATTACH = "vat"
+    VOLUMES_DETACH = "vdt"
+    FLOATING_IPS_REMARK = "fir"
+    FLOATING_IPS_DELETE = "fdl"
+    FLOATING_IPS_ASSIGN = "fia"
+    FLOATING_IPS_UNASSIGN = "fiu"
+    FLOATING_IPS_CHANGE_DNS = "fdn"
+    NETWORKS_REMARK = "nwr"
+    NETWORKS_DELETE = "ndl"
+    NETWORKS_ADD_SUBNET = "nas"
+    NETWORKS_DEL_SUBNET = "nds"
+    NETWORKS_ADD_ROUTE = "nar"
+    NETWORKS_DEL_ROUTE = "ndr"
+    FIREWALLS_REMARK = "fwr"
+    FIREWALLS_DELETE = "fld"
+    FIREWALLS_APPLY = "fwa"
+    FIREWALLS_REMOVE = "fwm"
+    LOAD_BALANCERS_REMARK = "lbr"
+    LOAD_BALANCERS_DELETE = "lbd"
+    LOAD_BALANCERS_ADD_TARGET = "lat"
+    LOAD_BALANCERS_DEL_TARGET = "ldt"
+    SSH_KEYS_REMARK = "skr"
+    SSH_KEYS_DELETE = "skd"
+    CERTIFICATES_REMARK = "cer"
+    CERTIFICATES_DELETE = "ced"
+    PLACEMENT_GROUPS_REMARK = "pgr"
+    PLACEMENT_GROUPS_DELETE = "pgd"
 
 
 class BotCB(CallbackData, prefix="x"):

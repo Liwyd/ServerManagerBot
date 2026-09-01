@@ -54,7 +54,11 @@ class Dialogs(StrEnum):
  • Monthly: <code>{price_monthly}</code>
 <b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
 """
-    SERVERS_REBUILD_CONFIRM = "<b>⚠️ Are you sure you want to rebuild the server?</b>\n🧹 This action will erase all data on the server.\n🖼️ Please select an image to proceed."
+    SERVERS_REBUILD_CONFIRM = (
+        "<b>⚠️ Are you sure you want to rebuild the server?</b>"
+        "\n🧹 This action will erase all data on the server."
+        "\n🖼️ Please select an image to proceed."
+    )
     SERVERS_IMAGES_NOT_FOUND = "🔍❌ Not found image."
     SERVERS_ENTER_REMARK = "✏️ Enter a remark for the server:"
     SERVERS_SELECT_DATACENTER = "🌍 Select a datacenter for the server:"
@@ -118,6 +122,142 @@ class Dialogs(StrEnum):
     PRIMARY_IPS_CREATE_SUCCESS = "<b>🎉✅ Primary IP created successfully.</b>"
     PRIMARY_IPS_NO_DATACENTERS = "🔍❌ No datacenters found."
     PRIMARY_IPS_SELECT_DATACENTER = "🌍 Select a datacenter for the primary IP:"
+
+    ### Volumes
+    VOLUMES_MENU = "<b>💾 Volumes Menu</b>\n👇 Select an action from the menu below."
+    VOLUMES_NOT_FOUND = "🔍❌ Not found volume."
+    VOLUMES_INFO = """
+<b>💾 Name:</b> <code>{name}</code>
+<b>📏 Size:</b> <code>{size} GB</code>
+<b>🌍 Location:</b> <code>{location}</code>
+<b>🔗 Server:</b> <code>{server}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    VOLUMES_ENTER_REMARK = "✏️ Enter a remark for the volume:"
+    VOLUMES_ENTER_SIZE = "📏 Enter the size in GB (min 10):"
+    VOLUMES_SELECT_LOCATION = "🌍 Select a location for the volume:"
+    VOLUMES_SELECT_SERVER = "🌍 Select a server to attach the volume:"
+    VOLUMES_CREATE_SUCCESS = "<b>🎉✅ Volume created successfully.</b>"
+    VOLUMES_UPDATE_SUCCESS = "<b>🎉✅ Volume updated successfully.</b>"
+    VOLUMES_CREATE_FAILED = "⚠️❌ Volume creation failed."
+    VOLUMES_NOT_FOUND_IN_LIST = "🔍❌ No unattached volumes found."
+
+    ### Floating IPs
+    FLOATING_IPS_MENU = "<b>🔗 Floating IPs Menu</b>\n👇 Select an action from the menu below."
+    FLOATING_IPS_NOT_FOUND = "🔍❌ Not found floating IP."
+    FLOATING_IPS_INFO = """
+<b>🔗 IP:</b> <code>{ip}</code>
+<b>🏷️ Description:</b> <code>{description}</code>
+<b>🌍 Type:</b> <code>{type}</code>
+<b>🔗 Server:</b> <code>{server}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    FLOATING_IPS_SELECT_TYPE = "🌍 Select the type of floating IP:"
+    FLOATING_IPS_SELECT_LOCATION = "🌍 Select a location for the floating IP:"
+    FLOATING_IPS_SELECT_SERVER = "🌍 Select a server to assign the floating IP:"
+    FLOATING_IPS_CREATE_SUCCESS = "<b>🎉✅ Floating IP created successfully.</b>"
+    FLOATING_IPS_UPDATE_SUCCESS = "<b>🎉✅ Floating IP updated successfully.</b>"
+    FLOATING_IPS_CREATE_FAILED = "⚠️❌ Floating IP creation failed."
+    FLOATING_IPS_ENTER_REMARK = "✏️ Enter a description for the floating IP:"
+    FLOATING_IPS_ENTER_DNS = "🌍 Enter the new reverse DNS hostname:"
+
+    ### Networks
+    NETWORKS_MENU = "<b>🕸️ Networks Menu</b>\n👇 Select an action from the menu below."
+    NETWORKS_NOT_FOUND = "🔍❌ Not found network."
+    NETWORKS_INFO = """
+<b>🕸️ Name:</b> <code>{name}</code>
+<b>🔗 IP Range:</b> <code>{ip_range}</code>
+<b>📍 Subnets:</b>\n{subnets}
+<b>🛤️ Routes:</b>\n{routes}
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    NETWORKS_ENTER_REMARK = "✏️ Enter a remark for the network:"
+    NETWORKS_ENTER_IP_RANGE = "🔗 Enter the IP range (e.g. 10.0.0.0/16):"
+    NETWORKS_CREATE_SUCCESS = "<b>🎉✅ Network created successfully.</b>"
+    NETWORKS_UPDATE_SUCCESS = "<b>🎉✅ Network updated successfully.</b>"
+    NETWORKS_CREATE_FAILED = "⚠️❌ Network creation failed."
+    NETWORKS_ENTER_SUBNET = "🔗 Enter the subnet IP range (e.g. 10.0.1.0/24):"
+    NETWORKS_ENTER_SUBNET_TYPE = "🌍 Select the subnet type:"
+    NETWORKS_ENTER_ROUTE = "🔗 Enter the destination (e.g. 10.100.0.0/16) and gateway (e.g. 10.0.0.1) separated by space:"
+    NETWORKS_SELECT_SUBNET = "🔗 Select a subnet to delete:"
+
+    ### Firewalls
+    FIREWALLS_MENU = "<b>🛡️ Firewalls Menu</b>\n👇 Select an action from the menu below."
+    FIREWALLS_NOT_FOUND = "🔍❌ Not found firewall."
+    FIREWALLS_INFO = """
+<b>🛡️ Name:</b> <code>{name}</code>
+<b>📋 Rules:</b> <code>{rules_count}</code>
+<b>🔗 Applied to:</b> <code>{applied_to}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    FIREWALLS_ENTER_REMARK = "✏️ Enter a remark for the firewall:"
+    FIREWALLS_CREATE_SUCCESS = "<b>🎉✅ Firewall created successfully.</b>"
+    FIREWALLS_UPDATE_SUCCESS = "<b>🎉✅ Firewall updated successfully.</b>"
+    FIREWALLS_CREATE_FAILED = "⚠️❌ Firewall creation failed."
+
+    ### Load Balancers
+    LOAD_BALANCERS_MENU = "<b>⚖️ Load Balancers Menu</b>\n👇 Select an action from the menu below."
+    LOAD_BALANCERS_NOT_FOUND = "🔍❌ Not found load balancer."
+    LOAD_BALANCERS_INFO = """
+<b>⚖️ Name:</b> <code>{name}</code>
+<b>🌍 Type:</b> <code>{type}</code>
+<b>🔗 IP:</b> <code>{ip}</code>
+<b>🌍 Location:</b> <code>{location}</code>
+<b>🔗 Targets:</b> <code>{targets}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    LOAD_BALANCERS_ENTER_REMARK = "✏️ Enter a remark for the load balancer:"
+    LOAD_BALANCERS_SELECT_TYPE = "🌍 Select a load balancer type:"
+    LOAD_BALANCERS_SELECT_LOCATION = "🌍 Select a location:"
+    LOAD_BALANCERS_CREATE_SUCCESS = "<b>🎉✅ Load balancer created successfully.</b>"
+    LOAD_BALANCERS_UPDATE_SUCCESS = "<b>🎉✅ Load balancer updated successfully.</b>"
+    LOAD_BALANCERS_CREATE_FAILED = "⚠️❌ Load balancer creation failed."
+    LOAD_BALANCERS_SELECT_SERVER = "🌍 Select a server to add as target:"
+
+    ### SSH Keys
+    SSH_KEYS_MENU = "<b>🔐 SSH Keys Menu</b>\n👇 Select an action from the menu below."
+    SSH_KEYS_NOT_FOUND = "🔍❌ Not found SSH key."
+    SSH_KEYS_INFO = """
+<b>🔐 Name:</b> <code>{name}</code>
+<b>🔑 Fingerprint:</b> <code>{fingerprint}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    SSH_KEYS_ENTER_REMARK = "✏️ Enter a name for the SSH key:"
+    SSH_KEYS_ENTER_PUBLIC_KEY = "🔑 Paste the public key:"
+    SSH_KEYS_CREATE_SUCCESS = "<b>🎉✅ SSH key added successfully.</b>"
+    SSH_KEYS_UPDATE_SUCCESS = "<b>🎉✅ SSH key updated successfully.</b>"
+    SSH_KEYS_CREATE_FAILED = "⚠️❌ SSH key creation failed."
+
+    ### Certificates
+    CERTIFICATES_MENU = "<b>📜 Certificates Menu</b>\n👇 Select an action from the menu below."
+    CERTIFICATES_NOT_FOUND = "🔍❌ Not found certificate."
+    CERTIFICATES_INFO = """
+<b>📜 Name:</b> <code>{name}</code>
+<b>🔗 Type:</b> <code>{type}</code>
+<b>🌐 Domains:</b> <code>{domains}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    CERTIFICATES_ENTER_REMARK = "✏️ Enter a name for the certificate:"
+    CERTIFICATES_ENTER_CERT = "📜 Paste the certificate PEM:"
+    CERTIFICATES_ENTER_KEY = "🔑 Paste the private key PEM:"
+    CERTIFICATES_ENTER_DOMAINS = "🌐 Enter domain names (comma separated):"
+    CERTIFICATES_CREATE_SUCCESS = "<b>🎉✅ Certificate created successfully.</b>"
+    CERTIFICATES_UPDATE_SUCCESS = "<b>🎉✅ Certificate updated successfully.</b>"
+    CERTIFICATES_CREATE_FAILED = "⚠️❌ Certificate creation failed."
+
+    ### Placement Groups
+    PLACEMENT_GROUPS_MENU = "<b>📍 Placement Groups Menu</b>\n👇 Select an action from the menu below."
+    PLACEMENT_GROUPS_NOT_FOUND = "🔍❌ Not found placement group."
+    PLACEMENT_GROUPS_INFO = """
+<b>📍 Name:</b> <code>{name}</code>
+<b>🔗 Type:</b> <code>{type}</code>
+<b>📅 Created:</b> <code>{created}</code> [<code>{created_day} days ago</code>]
+"""
+    PLACEMENT_GROUPS_ENTER_REMARK = "✏️ Enter a name for the placement group:"
+    PLACEMENT_GROUPS_SELECT_TYPE = "🌍 Select the placement group type:"
+    PLACEMENT_GROUPS_CREATE_SUCCESS = "<b>🎉✅ Placement group created successfully.</b>"
+    PLACEMENT_GROUPS_UPDATE_SUCCESS = "<b>🎉✅ Placement group updated successfully.</b>"
+    PLACEMENT_GROUPS_CREATE_FAILED = "⚠️❌ Placement group creation failed."
 
     ### Traffic Monitor
     TRAFFIC_ALERT = (
