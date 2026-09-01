@@ -1,14 +1,14 @@
 from secrets import token_hex
 
 from eiogram import Router
+from eiogram.filters import IgnoreStateFilter, StateFilter, Text
+from eiogram.state import State, StateGroup, StateManager
 from eiogram.types import CallbackQuery, Message
-from eiogram.filters import IgnoreStateFilter, Text, StateFilter
-from eiogram.state import StateManager, State, StateGroup
-from hcloud import Client as HCloudClient
 
 from src.db import AsyncSession, Client, UserMessage
-from src.keys import BotKB, BotCB, AreaType, TaskType
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
+from src.utils.async_hetzner import AsyncHetznerClient
 from src.utils.depends import ShouldBeOwner
 
 router = Router()
@@ -38,8 +38,8 @@ async def remark_handler(message: Message, db: AsyncSession, state: StateManager
 @router.message(StateFilter(ClientCreateForm.secret), Text())
 async def secret_handler(message: Message, db: AsyncSession, state: StateManager, state_data: dict, __: ShouldBeOwner):
     try:
-        hetzner = HCloudClient(token=message.text)
-        hetzner.datacenters.get_all()
+        hetzner = AsyncHetznerClient(token=message.text)
+        await hetzner.get_datacenters()
     except Exception:
         update = await message.answer(text=Dialogs.CLIENTS_INVALID_TOKEN)
         return await UserMessage.add(update)

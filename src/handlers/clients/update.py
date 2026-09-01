@@ -1,12 +1,12 @@
 from eiogram import Router
+from eiogram.filters import StateFilter, Text
+from eiogram.state import State, StateGroup, StateManager
 from eiogram.types import CallbackQuery, Message
-from eiogram.filters import Text, StateFilter
-from eiogram.state import StateManager, State, StateGroup
-from hcloud import Client as HCloudClient
 
 from src.db import AsyncSession, Client, UserMessage
-from src.keys import BotKB, BotCB, AreaType, TaskType, StepType
+from src.keys import AreaType, BotCB, BotKB, StepType, TaskType
 from src.lang import Dialogs
+from src.utils.async_hetzner import AsyncHetznerClient
 from src.utils.depends import ShouldBeOwner
 
 router = Router()
@@ -56,8 +56,8 @@ async def input_handler(message: Message, db: AsyncSession, state: StateManager,
             await Client.update(db, client.id, remark=message.text)
         case StepType.CHANGE_SECRET:
             try:
-                hetzner = HCloudClient(token=message.text)
-                hetzner.datacenters.get_all()
+                hetzner = AsyncHetznerClient(token=message.text)
+                await hetzner.get_datacenters()
             except Exception:
                 update = await message.answer(text=Dialogs.CLIENTS_INVALID_TOKEN)
                 return await UserMessage.add(update)

@@ -1,6 +1,7 @@
 import logging
 
 from eiogram.types import Update
+
 from src.config import DP
 from src.db import UserMessage
 
@@ -11,4 +12,4 @@ async def fallback_handler(update: Update):
     if update.message:
         await UserMessage.add(update.message)
     if update.callback_query:
-        return await update.callback_query.answer()
+        return await update.callback_query.answer(text="This action is no longer available.", show_alert=True)

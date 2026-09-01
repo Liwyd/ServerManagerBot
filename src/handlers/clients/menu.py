@@ -1,11 +1,11 @@
 from eiogram import Router
-from eiogram.types import CallbackQuery
 from eiogram.filters import IgnoreStateFilter
 from eiogram.state import StateManager
+from eiogram.types import CallbackQuery
 
-from src.db import AsyncSession, UserMessage, User
+from src.db import AsyncSession, User, UserMessage
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
-from src.keys import BotKB, BotCB, AreaType, TaskType
 from src.utils.depends import ClearState
 
 router = Router()

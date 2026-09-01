@@ -1,5 +1,6 @@
 from eiogram import Router
-from . import menu, create, update, info
+
+from . import create, info, menu, update
 
 
 def setup_clients_handlers():
