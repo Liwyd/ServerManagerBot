@@ -1,10 +1,10 @@
 from eiogram import Router
+from eiogram.filters import StateFilter, Text
+from eiogram.state import State, StateGroup, StateManager
 from eiogram.types import CallbackQuery, Message
-from eiogram.filters import Text, StateFilter
-from eiogram.state import StateManager, State, StateGroup
 
 from src.db import AsyncSession, UserMessage
-from src.keys import BotKB, BotCB, AreaType, TaskType
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
 from src.utils.depends import GetHetzner, ShouldBeOwner
 
@@ -31,7 +31,7 @@ async def remark_handler(message: Message, db: AsyncSession, state: StateManager
     if len(message.text.split(" ")) > 1:
         update = await message.answer(text=Dialogs.SERVERS_REMARK_VALIDATION)
         return await UserMessage.add(update)
-    datacenters = hetzner.datacenters.get_all()
+    datacenters = await hetzner.get_datacenters()
     if not datacenters:
         update = await message.answer(text=Dialogs.SERVERS_DATACENTERS_NOT_FOUND)
         return await UserMessage.add(update)
@@ -51,7 +51,7 @@ async def datacenter_handler(
     hetzner: GetHetzner,
     __: ShouldBeOwner,
 ):
-    plans = hetzner.server_types.get_all()
+    plans = await hetzner.get_server_types()
     if not plans:
         return await callback_query.answer(text=Dialogs.SERVERS_PLANS_NOT_FOUND, show_alert=True)
     plans.sort(key=lambda x: float(x.prices[0]["price_monthly"]["net"]))
@@ -68,10 +68,10 @@ async def plan_handler(
     hetzner: GetHetzner,
     __: ShouldBeOwner,
 ):
-    plan = hetzner.server_types.get_by_id(int(callback_data.target))
+    plan = await hetzner.get_server_type_by_id(int(callback_data.target))
     if not plan:
         return await callback_query.answer(text=Dialogs.SERVERS_PLANS_NOT_FOUND, show_alert=True)
-    images = hetzner.images.get_all(type=["system", "snapshot"], architecture=plan.architecture)
+    images = await hetzner.get_images(type=["system", "snapshot"], architecture=plan.architecture)
     if not images:
         return await callback_query.answer(text=Dialogs.SERVERS_IMAGES_NOT_FOUND, show_alert=True)
     images.sort(key=lambda x: x.name or x.description)
@@ -92,26 +92,33 @@ async def image_handler(
     hetzner: GetHetzner,
     __: ShouldBeOwner,
 ):
-    image = hetzner.images.get_by_id(int(callback_data.target))
+    image = await hetzner.get_image_by_id(int(callback_data.target))
     if not image:
         return await callback_query.answer(text=Dialogs.SERVERS_IMAGES_NOT_FOUND, show_alert=True)
-    server_type = hetzner.server_types.get_by_id(state_data["plan_id"])
+    server_type = await hetzner.get_server_type_by_id(state_data["plan_id"])
     if not server_type:
         return await callback_query.answer(text=Dialogs.SERVERS_PLANS_NOT_FOUND, show_alert=True)
-    datacenter = hetzner.datacenters.get_by_id(state_data["datacenter_id"])
+    datacenter = await hetzner.get_datacenter_by_id(state_data["datacenter_id"])
     if not datacenter:
         return await callback_query.answer(text=Dialogs.SERVERS_DATACENTERS_NOT_FOUND, show_alert=True)
-    server = hetzner.servers.create(
-        name=state_data["remark"],
-        datacenter=datacenter,
-        server_type=server_type,
-        image=image,
-    )
-    if not server or not server.server:
+
+    await callback_query.answer(text=Dialogs.ACTIONS_WAITING)
+
+    try:
+        response = await hetzner.create_server(
+            name=state_data["remark"],
+            datacenter=datacenter,
+            server_type=server_type,
+            image=image,
+        )
+    except Exception as e:
+        return await callback_query.answer(text=f"{Dialogs.SERVERS_CREATION_FAILED}\n{e}", show_alert=True)
+
+    if not response or not response.server:
         return await callback_query.answer(text=Dialogs.SERVERS_CREATION_FAILED, show_alert=True)
 
     await state.clear_state(db=db)
     update = await callback_query.message.answer(
-        text=Dialogs.SERVERS_CREATION_SUCCESS, reply_markup=BotKB.servers_back(id=server.server.id)
+        text=Dialogs.SERVERS_CREATION_SUCCESS, reply_markup=BotKB.servers_back(id=response.server.id)
     )
     return await UserMessage.clear(update)

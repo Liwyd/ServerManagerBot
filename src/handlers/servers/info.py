@@ -1,15 +1,14 @@
 from datetime import datetime, timezone
 
 from eiogram import Router
-from eiogram.types import CallbackQuery
 from eiogram.filters import IgnoreStateFilter
+from eiogram.types import CallbackQuery
 
-from src.db import UserMessage, User
-from src.keys import BotKB, BotCB, AreaType, TaskType
-from src.utils.depends import GetHetzner, ClearState
-from src.utils.euro import get_euro
+from src.db import User, UserMessage
+from src.keys import AreaType, BotCB, BotKB, TaskType
 from src.lang import Dialogs
-
+from src.utils.depends import ClearState, GetHetzner
+from src.utils.euro import get_euro
 
 router = Router()
 
@@ -28,7 +27,7 @@ async def servers_info(
         if server_id not in dbuser.get_server_ids(int(state_data.get("client_id"))):
             return await callback_query.answer("Access Denied", show_alert=True)
 
-    server = hetzner.servers.get_by_id(server_id)
+    server = await hetzner.get_server_by_id(server_id)
     if not server:
         return await callback_query.message.edit(text=Dialogs.SERVERS_NOT_FOUND)
     ingoing_gb = round(((server.ingoing_traffic or 0) / 1024**3), 3)
@@ -51,6 +50,9 @@ async def servers_info(
             price_hourly = f"{hourly:.4f}€"
             price_monthly = f"{monthly:.2f}€"
 
+    snapshots = await hetzner.get_images(type="snapshot")
+    snapshot_count = len([s for s in snapshots if s.created_from and s.created_from.id == server.id])
+
     text = Dialogs.SERVERS_INFO.format(
         name=server.name,
         status=server.status,
@@ -64,13 +66,7 @@ async def servers_info(
         image=server.image.name or server.image.description,
         created_day=(datetime.now(tz=timezone.utc) - server.created).days,
         disk=server.server_type.disk,
-        snapshot=len(
-            [
-                snapshot
-                for snapshot in hetzner.images.get_all(type="snapshot")
-                if snapshot.created_from and snapshot.created_from.id == server.id
-            ]
-        ),
+        snapshot=snapshot_count,
         traffic_in=ingoing_gb,
         traffic_out=outgoing_gb,
         traffic_total=total_gb,
@@ -84,7 +80,10 @@ async def servers_info(
         update = await callback_query.message.edit(
             text=text, reply_markup=BotKB.servers_update(server=server, is_owner=dbuser.is_owner)
         )
-    except Exception:
-        await callback_query.answer()
+    except Exception as e:
+        if "message is not modified" in str(e).lower():
+            await callback_query.answer()
+            return
+        await callback_query.answer(text=Dialogs.ACTIONS_FAILED, show_alert=True)
         return
     return await UserMessage.clear(update, keep_current=True)

@@ -1,11 +1,10 @@
-import asyncio
 from eiogram import Router
-from eiogram.types import CallbackQuery, Message
 from eiogram.filters import StateFilter, Text
-from eiogram.state import StateManager, State, StateGroup
+from eiogram.state import State, StateGroup, StateManager
+from eiogram.types import CallbackQuery, Message
 
-from src.db import AsyncSession, UserMessage, ServerAccess, User
-from src.keys import BotKB, BotCB, AreaType, TaskType, StepType
+from src.db import AsyncSession, ServerAccess, User, UserMessage
+from src.keys import AreaType, BotCB, BotKB, StepType, TaskType
 from src.lang import Dialogs
 from src.utils.depends import GetHetzner
 
@@ -37,7 +36,7 @@ async def servers_update(
     state_data: dict,
 ):
     kb = BotKB.servers_back(id=callback_data.target)
-    server = hetzner.servers.get_by_id(int(callback_data.target))
+    server = await hetzner.get_server_by_id(int(callback_data.target))
     if not server:
         return await callback_query.message.edit(text=Dialogs.SERVERS_NOT_FOUND, reply_markup=kb)
 
@@ -68,7 +67,7 @@ async def servers_update(
                 return await callback_query.answer(text=Dialogs.SERVERS_ASSIGN_UNASSIGN_IPV4, show_alert=True)
             if ip_type == "ipv6" and server.public_net.primary_ipv6:
                 return await callback_query.answer(text=Dialogs.SERVERS_ASSIGN_UNASSIGN_IPV6, show_alert=True)
-            primary_ips = hetzner.primary_ips.get_all()
+            primary_ips = await hetzner.get_primary_ips()
             if not primary_ips:
                 return await callback_query.answer(text=Dialogs.SERVERS_PRIMARY_IPS_NOT_FOUND, show_alert=True)
             filtered_ips = [ip for ip in primary_ips if not ip.assignee_id and ip.type == ip_type]
@@ -80,7 +79,7 @@ async def servers_update(
         case StepType.SERVERS_REBUILD:
             text = Dialogs.SERVERS_REBUILD_CONFIRM
             _state = ServerUpdateForm.image
-            images = hetzner.images.get_all(type=["system", "snapshot"], architecture=server.image.architecture)
+            images = await hetzner.get_images(type=["system", "snapshot"], architecture=server.image.architecture)
             if not images:
                 return await callback_query.answer(text=Dialogs.SERVERS_IMAGES_NOT_FOUND, show_alert=True)
             images.sort(key=lambda x: x.name or x.description)
@@ -89,7 +88,7 @@ async def servers_update(
         case StepType.SERVERS_DEL_SNAPSHOT:
             text = Dialogs.SERVERS_SNAPSHOT_DELETE_CONFIRM
             _state = ServerUpdateForm.image
-            images = hetzner.images.get_all(type="snapshot")
+            images = await hetzner.get_images(type="snapshot")
             if not images:
                 return await callback_query.answer(text=Dialogs.SERVERS_SNAPSHOT_NOT_FOUND, show_alert=True)
             images = [img for img in images if img.created_from and img.created_from.id == int(callback_data.target)]
@@ -99,7 +98,7 @@ async def servers_update(
         case StepType.SERVERS_REMARK:
             text = Dialogs.SERVERS_ENTER_REMARK
         case StepType.SERVERS_UPGRADE:
-            server_types = hetzner.server_types.get_all()
+            server_types = await hetzner.get_server_types()
             current_type = server.server_type
             upgrade_plans = [
                 st
@@ -112,7 +111,9 @@ async def servers_update(
                 return await callback_query.answer(text=Dialogs.SERVERS_UPGRADE_NOT_FOUND, show_alert=True)
             upgrade_plans.sort(key=lambda x: (x.memory, x.cores, x.disk))
             text = Dialogs.SERVERS_UPGRADE_SELECT.format(
-                current_plan=f"{current_type.name} [{current_type.memory}GB RAM, {current_type.cores} CPU, {current_type.disk}GB Disk]"
+                current_plan=(
+                    f"{current_type.name} [{current_type.memory}GB RAM, {current_type.cores} CPU, {current_type.disk}GB Disk]"
+                )
             )
             _state = ServerUpdateForm.upgrade
             kb = BotKB.upgrade_plans_select(plans=upgrade_plans, server_id=server.id)
@@ -153,7 +154,7 @@ async def select_image_handler(
     state_data: dict,
     hetzner: GetHetzner,
 ):
-    server = hetzner.servers.get_by_id(int(state_data["target"]))
+    server = await hetzner.get_server_by_id(int(state_data["target"]))
     if not server:
         return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
 
@@ -171,9 +172,9 @@ async def select_image_handler(
 
 @router.message(StateFilter(ServerUpdateForm.input), Text())
 async def input_handler(
-    message: Message, state: StateManager, db: StateFilter, state_data: dict, hetzner: GetHetzner, dbuser: User
+    message: Message, state: StateManager, db: AsyncSession, state_data: dict, hetzner: GetHetzner, dbuser: User
 ):
-    server = hetzner.servers.get_by_id(int(state_data["target"]))
+    server = await hetzner.get_server_by_id(int(state_data["target"]))
     if not server:
         update = await message.answer(text=Dialogs.SERVERS_NOT_FOUND, reply_markup=BotKB.servers_back())
         return await UserMessage.add(update)
@@ -189,7 +190,7 @@ async def input_handler(
             if len(message.text.split(" ")) > 1:
                 update = await message.answer(text=Dialogs.SERVERS_REMARK_VALIDATION)
                 return await UserMessage.add(update)
-            server.update(name=message.text)
+            await hetzner.update_server(server, name=message.text)
         case StepType.SERVERS_ACCESS_GRANT:
             if not client_id:
                 update = await message.answer("Client ID missing from state.", reply_markup=BotKB.home_back())
@@ -245,10 +246,10 @@ async def select_ip_handler(
     state_data: dict,
     dbuser: User,
 ):
-    primary_ip = hetzner.primary_ips.get_by_id(int(callback_data.target))
+    primary_ip = await hetzner.get_primary_ip_by_id(int(callback_data.target))
     if not primary_ip:
         return await callback_query.message.edit(text=Dialogs.SERVERS_PRIMARY_IPS_NOT_FOUND, reply_markup=BotKB.home_back())
-    server = hetzner.servers.get_by_id(int(state_data["target"]))
+    server = await hetzner.get_server_by_id(int(state_data["target"]))
     if not server:
         return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
 
@@ -259,10 +260,8 @@ async def select_ip_handler(
 
     await callback_query.message.edit(text=Dialogs.ACTIONS_WAITING)
     if server.status != "off":
-        server.power_off()
-    await asyncio.sleep(2)
-    primary_ip.assign(assignee_id=server.id, assignee_type="server")
-    await asyncio.sleep(2)
+        await hetzner.power_off_server(server)
+    await hetzner.assign_primary_ip(primary_ip, assignee_id=server.id, assignee_type="server")
     await state.clear_state(db=db)
     return await callback_query.message.edit(text=Dialogs.ACTIONS_SUCCESS, reply_markup=BotKB.servers_back(server.id))
 
@@ -277,10 +276,10 @@ async def select_upgrade_handler(
     state_data: dict,
     dbuser: User,
 ):
-    server_type = hetzner.server_types.get_by_id(int(callback_data.target))
+    server_type = await hetzner.get_server_type_by_id(int(callback_data.target))
     if not server_type:
         return await callback_query.answer(text=Dialogs.SERVERS_UPGRADE_NOT_FOUND, show_alert=True)
-    server = hetzner.servers.get_by_id(int(state_data["target"]))
+    server = await hetzner.get_server_by_id(int(state_data["target"]))
     if not server:
         return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
 
@@ -292,7 +291,7 @@ async def select_upgrade_handler(
     if server.status != "off":
         return await callback_query.answer(text=Dialogs.SERVERS_SHOULD_BE_OFF, show_alert=True)
     await callback_query.message.edit(text=Dialogs.ACTIONS_WAITING)
-    server.change_type(server_type=server_type, upgrade_disk=True)
+    await hetzner.change_server_type(server, server_type=server_type, upgrade_disk=True)
     await state.clear_state(db=db)
     return await callback_query.message.edit(text=Dialogs.SERVERS_UPGRADE_SUCCESS, reply_markup=BotKB.servers_back(server.id))
 
@@ -310,7 +309,7 @@ async def approval_handler(
     if not callback_data.is_approve:
         return await callback_query.message.edit(text=Dialogs.ACTIONS_CANCELLED, reply_markup=BotKB.servers_back())
 
-    server = hetzner.servers.get_by_id(int(state_data["target"]))
+    server = await hetzner.get_server_by_id(int(state_data["target"]))
     if not server:
         return await callback_query.answer(text=Dialogs.SERVERS_NOT_FOUND, show_alert=True)
 
@@ -324,47 +323,45 @@ async def approval_handler(
         case StepType.SERVERS_UNASSIGN_IPV4:
             await callback_query.message.edit(text=Dialogs.ACTIONS_WAITING)
             if server.status != "off":
-                server.power_off()
-            await asyncio.sleep(2)
+                await hetzner.power_off_server(server)
             if server.public_net.primary_ipv4:
-                server.public_net.primary_ipv4.unassign()
+                await hetzner.unassign_primary_ip(server.public_net.primary_ipv4)
         case StepType.SERVERS_UNASSIGN_IPV6:
             await callback_query.message.edit(text=Dialogs.ACTIONS_WAITING)
             if server.status != "off":
-                server.power_off()
-            await asyncio.sleep(2)
+                await hetzner.power_off_server(server)
             if server.public_net.primary_ipv6:
-                server.public_net.primary_ipv6.unassign()
+                await hetzner.unassign_primary_ip(server.public_net.primary_ipv6)
         case StepType.SERVERS_POWER_OFF:
-            server.power_off()
+            await hetzner.power_off_server(server)
         case StepType.SERVERS_POWER_ON:
-            server.power_on()
+            await hetzner.power_on_server(server)
         case StepType.SERVERS_RESET_PASSWORD:
-            password = server.reset_password()
+            response = await hetzner.reset_server_password(server)
             await callback_query.message.answer(
-                text=Dialogs.SERVERS_PASSWORD_RESET_SUCCESS.format(password=password.root_password),
+                text=Dialogs.SERVERS_PASSWORD_RESET_SUCCESS.format(password=response.root_password),
             )
         case StepType.SERVERS_RESET:
-            server.reset()
+            await hetzner.reset_server(server)
         case StepType.SERVERS_REBOOT:
-            server.reboot()
+            await hetzner.reboot_server(server)
         case StepType.SERVERS_CREATE_SNAPSHOT:
-            server.create_image(type="snapshot")
+            await hetzner.create_server_image(server, type="snapshot")
         case StepType.SERVERS_REMOVE:
-            server.delete()
+            await hetzner.delete_server(server)
             kb = BotKB.servers_back()
         case StepType.SERVERS_REBUILD:
-            image = hetzner.images.get_by_id(int(state_data["image_id"]))
+            image = await hetzner.get_image_by_id(int(state_data["image_id"]))
             if not image:
                 return await callback_query.message.edit(text=Dialogs.SERVERS_IMAGES_NOT_FOUND, reply_markup=BotKB.home_back())
-            server.rebuild(image=image)
+            await hetzner.rebuild_server(server, image=image)
         case StepType.SERVERS_DEL_SNAPSHOT:
-            image = hetzner.images.get_by_id(int(state_data["image_id"]))
+            image = await hetzner.get_image_by_id(int(state_data["image_id"]))
             if not image:
                 return await callback_query.message.edit(
                     text=Dialogs.SERVERS_SNAPSHOT_NOT_FOUND, reply_markup=BotKB.home_back()
                 )
-            image.delete()
+            await hetzner.delete_image(image)
 
     await state.clear_state(db=db)
     return await callback_query.message.edit(text=Dialogs.ACTIONS_SUCCESS, reply_markup=kb)
