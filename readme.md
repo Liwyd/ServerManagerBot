@@ -1,13 +1,30 @@
 # ServerManagerBot
 
-Telegram bot for managing Hetzner Cloud servers, snapshots, and primary IPs.
+Telegram bot for managing Hetzner Cloud resources.
 
 ## Features
 
-- **Server Management**: Create, reboot, rebuild, power on/off, rename, upgrade, and delete servers
-- **Snapshot Management**: Create, restore, delete, and rename snapshots
-- **Primary IP Management**: Assign, unassign, rename, and delete primary IPs
-- **Client Management**: Add multiple Hetzner API tokens, manage per-client server access
+### Compute
+- **Servers**: Create, reboot, rebuild, power on/off, rename, upgrade, reset password, and delete
+- **Snapshots**: Create, restore, delete, and rename snapshots
+- **Placement Groups**: Create, rename, and delete placement groups
+
+### Networking
+- **Primary IPs**: Create, assign, unassign, rename, and delete primary IPs (IPv4/IPv6)
+- **Floating IPs**: Create, assign, unassign, rename, change reverse DNS, and delete
+- **Networks**: Create, rename, add/remove subnets, add/remove routes, and delete
+- **Firewalls**: Create, rename, apply to servers, remove from servers, and delete
+- **Load Balancers**: Create, rename, add/remove targets, and delete
+
+### Storage
+- **Volumes**: Create, attach to servers, detach, resize, rename, and delete
+
+### Security
+- **SSH Keys**: Add, rename, and delete SSH keys
+- **Certificates**: Upload custom or create managed SSL certificates, rename, and delete
+
+### Management
+- **Multi-client support**: Add multiple Hetzner API tokens, manage per-client server access
 - **Traffic Monitoring**: Hourly checks that alert admins when server traffic exceeds threshold
 - **Access Control**: Grant/revoke server access to specific Telegram users per client
 
@@ -22,6 +39,32 @@ The installer will:
 - Pull the pre-built image from Docker Hub (`liwyd/servermanagerbot`)
 - Create configuration with generated secure passwords
 - Start all services
+
+## Updating
+
+```bash
+sudo bash /opt/servermanagerbot/install.sh --update
+```
+
+The updater will:
+- Back up your `.env` file and database automatically
+- Pull the latest image
+- Run database migrations
+- Restart services with zero downtime
+- Clean up old Docker images
+- Roll back automatically if anything fails
+
+### What the backup includes
+- `.env` file copy
+- Full PostgreSQL database dump
+- Backups stored in `/opt/servermanagerbot/backups/` (last 5 kept)
+
+### Manual update (alternative)
+
+```bash
+cd /opt/servermanagerbot
+sudo bash install.sh --update
+```
 
 ## Manual Installation
 
@@ -88,8 +131,8 @@ docker compose restart
 # Stop services
 docker compose down
 
-# Update
-git pull && docker compose pull && docker compose up -d
+# Update (with backup and rollback)
+sudo bash install.sh --update
 
 # Check status
 docker compose ps
@@ -99,10 +142,15 @@ docker compose ps
 
 - PostgreSQL data: Docker volume `servermanagerbot_postgres_data`
 - Configuration: `/opt/servermanagerbot/.env`
+- Backups: `/opt/servermanagerbot/backups/`
 
 ## Backup
 
 ```bash
+# Using the install script
+sudo bash install.sh --update  # Creates backup automatically
+
+# Manual backup
 docker compose exec postgres pg_dumpall -U smbuser > backup_$(date +%Y%m%d).sql
 ```
 

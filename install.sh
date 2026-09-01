@@ -1,14 +1,16 @@
 #!/bin/bash
 set -e
 
-# ServerManagerBot - One-line Installer
+# ServerManagerBot - Installer & Updater
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
+#   Install:  curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
+#   Update:   sudo bash install.sh --update
 
 INSTALL_DIR="/opt/servermanagerbot"
 REPO_URL="https://github.com/Liwyd/ServerManagerBot.git"
 BRANCH="master"
 DOCKER_IMAGE="liwyd/servermanagerbot:latest"
+BACKUP_DIR="/opt/servermanagerbot/backups"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,23 +35,93 @@ generate_password() {
     fi
 }
 
+cleanup_old_images() {
+    log "Cleaning up old Docker images..."
+    # Remove dangling images
+    docker image prune -f 2>/dev/null || true
+    # Remove old servermanagerbot images (keep last 2)
+    local old_images
+    old_images=$(docker images "liwyd/servermanagerbot" --format '{{.ID}} {{.CreatedAt}}' | sort -k2 -r | tail -n +3 | awk '{print $1}')
+    if [ -n "$old_images" ]; then
+        echo "$old_images" | xargs docker rmi 2>/dev/null || true
+        log "Old images cleaned up."
+    else
+        log "No old images to clean up."
+    fi
+}
+
+backup_database() {
+    local backup_file="$1"
+    log "Creating database backup..."
+    if docker compose exec -T postgres pg_isready -U smbuser -d servermanagerbot >/dev/null 2>&1; then
+        docker compose exec -T postgres pg_dump -U smbuser -d servermanagerbot > "$backup_file" 2>/dev/null
+        log "Database backup saved to: $backup_file"
+        return 0
+    else
+        warn "Database not reachable, skipping backup."
+        return 1
+    fi
+}
+
+restore_database() {
+    local backup_file="$1"
+    if [ ! -f "$backup_file" ]; then
+        error "Backup file not found: $backup_file"
+        return 1
+    fi
+    log "Restoring database from backup..."
+    docker compose exec -T postgres psql -U smbuser -d servermanagerbot < "$backup_file" 2>/dev/null
+    log "Database restored."
+}
+
+rollback_update() {
+    local backup_dir="$1"
+    error "Update failed. Rolling back..."
+    # Restore .env if backed up
+    if [ -f "$backup_dir/.env.backup" ]; then
+        cp "$backup_dir/.env.backup" "$INSTALL_DIR/.env"
+        log "Restored .env from backup."
+    fi
+    # Restore database if backed up
+    if [ -f "$backup_dir/db_backup.sql" ]; then
+        restore_database "$backup_dir/db_backup.sql" || true
+    fi
+    # Restart with old image
+    docker compose up -d 2>/dev/null || true
+    error "Rollback complete. Please check the logs: cd $INSTALL_DIR && docker compose logs"
+    exit 1
+}
+
 # Ensure interactive prompts work even when piped
 if [ ! -t 0 ] && [ -e /dev/tty ]; then
     exec </dev/tty
 fi
 
-header "ServerManagerBot Installer"
+# ── Parse arguments ──────────────────────────────────────────
+
+MODE="install"
+if [ "$1" = "--update" ] || [ "$1" = "-u" ]; then
+    MODE="update"
+fi
+
+header "ServerManagerBot - $MODE"
 
 if [ "$EUID" -ne 0 ]; then
-    error "This installer must be run as root (use sudo)."
+    error "This script must be run as root (use sudo)."
     exit 1
 fi
+
+# ── Pre-flight checks ───────────────────────────────────────
 
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 log "Detected OS: $OS, Architecture: $ARCH"
 
 if ! command_exists docker; then
+    if [ "$MODE" = "update" ]; then
+        error "Docker is not installed. Cannot update."
+        exit 1
+    fi
     log "Installing Docker..."
     if [ "$OS" = "Linux" ]; then
         curl -fsSL https://get.docker.com | sh
@@ -67,6 +139,152 @@ if ! docker compose version >/dev/null 2>&1; then
     exit 1
 fi
 log "Docker Compose available: $(docker compose version --short)"
+
+# ── UPDATE MODE ──────────────────────────────────────────────
+
+if [ "$MODE" = "update" ]; then
+    if [ ! -d "$INSTALL_DIR" ]; then
+        error "No installation found at $INSTALL_DIR. Run install instead."
+        exit 1
+    fi
+
+    cd "$INSTALL_DIR"
+
+    if [ ! -f "$INSTALL_DIR/.env" ]; then
+        error ".env file not found at $INSTALL_DIR/.env"
+        exit 1
+    fi
+
+    # Create backup directory
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
+    mkdir -p "$BACKUP_PATH"
+
+    # Backup .env
+    cp "$INSTALL_DIR/.env" "$BACKUP_PATH/.env.backup"
+    log "Backed up .env to $BACKUP_PATH/.env.backup"
+
+    # Backup database
+    backup_database "$BACKUP_PATH/db_backup.sql" || true
+
+    # Pull new image
+    header "Pulling latest image"
+    OLD_IMAGE=$(docker inspect --format='{{.Image}}' servermanagerbot-servermanagerbot-1 2>/dev/null || echo "none")
+    if docker compose pull 2>/dev/null; then
+        log "New image pulled successfully."
+    else
+        warn "Could not pull from Docker Hub. Attempting local build..."
+        if [ -f "Dockerfile" ]; then
+            docker compose build --no-cache 2>/dev/null || rollback_update "$BACKUP_PATH"
+            log "Built locally."
+        else
+            error "No Dockerfile found and no remote image available."
+            rollback_update "$BACKUP_PATH"
+        fi
+    fi
+
+    NEW_IMAGE=$(docker inspect --format='{{.Image}}' servermanagerbot-servermanagerbot-1 2>/dev/null || echo "none")
+
+    # Check if image actually changed
+    if [ "$OLD_IMAGE" = "$NEW_IMAGE" ] && [ "$OLD_IMAGE" != "none" ]; then
+        log "Image unchanged. Checking for source code updates..."
+        git pull origin "$BRANCH" 2>/dev/null || true
+        # Rebuild if source changed
+        if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+            log "Source code changed, rebuilding..."
+            docker compose build --no-cache 2>/dev/null || rollback_update "$BACKUP_PATH"
+        else
+            log "No changes detected. Nothing to update."
+            rm -rf "$BACKUP_PATH"
+            exit 0
+        fi
+    fi
+
+    # Stop old container
+    header "Stopping old container"
+    docker compose down 2>/dev/null || true
+
+    # Update source code
+    header "Updating source code"
+    git pull origin "$BRANCH" 2>/dev/null || {
+        warn "Git pull failed. Re-cloning..."
+        cd /
+        rm -rf "$INSTALL_DIR"
+        git clone --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
+        cd "$INSTALL_DIR"
+    }
+
+    # Run migrations
+    header "Running database migrations"
+    if docker compose up -d postgres 2>/dev/null; then
+        sleep 5
+        MAX_WAIT=30
+        WAITED=0
+        while [ $WAITED -lt $MAX_WAIT ]; do
+            if docker compose exec -T postgres pg_isready -U smbuser -d servermanagerbot >/dev/null 2>&1; then
+                break
+            fi
+            sleep 2
+            WAITED=$((WAITED + 2))
+        done
+        if [ $WAITED -ge $MAX_WAIT ]; then
+            warn "Database not ready, skipping migrations."
+        else
+            log "Running Alembic migrations..."
+            docker compose run --rm servermanagerbot uv run alembic upgrade head 2>/dev/null || {
+                warn "Migration failed. The new version may require manual intervention."
+                warn "Check logs: cd $INSTALL_DIR && docker compose logs"
+            }
+        fi
+    fi
+
+    # Start all services
+    header "Starting updated services"
+    docker compose up -d 2>/dev/null || rollback_update "$BACKUP_PATH"
+
+    # Wait for health
+    sleep 5
+    MAX_WAIT=60
+    WAITED=0
+    while [ $WAITED -lt $MAX_WAIT ]; do
+        if docker compose exec -T postgres pg_isready -U smbuser -d servermanagerbot >/dev/null 2>&1; then
+            log "Database is ready."
+            break
+        fi
+        sleep 2
+        WAITED=$((WAITED + 2))
+        echo -n "."
+    done
+    echo
+
+    # Verify bot is running
+    sleep 3
+    if docker compose ps servermanagerbot 2>/dev/null | grep -q "Up"; then
+        log "Bot container is running."
+    else
+        warn "Bot container may not be running. Check logs: cd $INSTALL_DIR && docker compose logs"
+    fi
+
+    # Cleanup
+    header "Cleaning up"
+    cleanup_old_images
+
+    # Keep only last 5 backups
+    if [ -d "$BACKUP_DIR" ]; then
+        ls -dt "$BACKUP_DIR"/*/ 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
+    fi
+
+    header "Update complete"
+    echo -e "${GREEN}ServerManagerBot updated successfully!${NC}"
+    echo ""
+    echo "  Backup saved: $BACKUP_PATH"
+    echo "  Logs:         cd $INSTALL_DIR && docker compose logs -f"
+    echo "  Restart:      cd $INSTALL_DIR && docker compose restart"
+    echo ""
+    exit 0
+fi
+
+# ── INSTALL MODE ─────────────────────────────────────────────
 
 EXISTING_ENV=false
 if [ -d "$INSTALL_DIR" ]; then
@@ -135,6 +353,7 @@ else
 fi
 
 mkdir -p "$INSTALL_DIR/data"
+mkdir -p "$BACKUP_DIR"
 
 header "Pulling and starting services"
 
@@ -184,5 +403,5 @@ echo "  Config file:       $INSTALL_DIR/.env"
 echo "  Logs:              cd $INSTALL_DIR && docker compose logs -f"
 echo "  Restart:           cd $INSTALL_DIR && docker compose restart"
 echo "  Stop:              cd $INSTALL_DIR && docker compose down"
-echo "  Update:            cd $INSTALL_DIR && docker compose pull && docker compose up -d"
+echo "  Update:            sudo bash $INSTALL_DIR/install.sh --update"
 echo ""
