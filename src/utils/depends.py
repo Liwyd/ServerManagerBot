@@ -15,18 +15,18 @@ async def clear_state(db: AsyncSession, state: StateManager) -> None:
 
 async def get_hetzner(db: AsyncSession, state_data: dict) -> AsyncHetznerClient:
     client_id = state_data.get("client_id")
-    if client_id is None:
-        logging.warning("No client_id found in state data.")
-        raise Exception("No client selected")
-    client = await Client.get_by_id(db, client_id)
-    if not client:
-        logging.warning(f"Client not found for client_id: {client_id}")
-        raise Exception("Client not found")
-    return AsyncHetznerClient(token=client.secret)
+    if client_id is not None:
+        client = await Client.get_by_id(db, client_id)
+        if client:
+            return AsyncHetznerClient(token=client.secret)
+    clients = await Client.get_all(db)
+    if clients:
+        return AsyncHetznerClient(token=clients[0].secret)
+    raise Exception("No client configured. Add one first.")
 
 
 async def should_be_owner(update: Update, dbuser: User, db: AsyncSession) -> None:
-    if not dbuser.is_owner:
+    if not await User.is_admin(db, dbuser.id):
         if update.callback_query:
             await update.callback_query.answer("Access Denied", show_alert=True)
         elif update.message:

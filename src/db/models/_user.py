@@ -99,6 +99,14 @@ class User(Base):
         return self.id in TELEGRAM_ADMINS_ID
 
     @classmethod
+    async def is_admin(cls, db: AsyncSession, user_id: int) -> bool:
+        if user_id in TELEGRAM_ADMINS_ID:
+            return True
+        from ._admin import Admin
+        admin = await Admin.get_by_user_id(db, user_id)
+        return admin is not None
+
+    @classmethod
     async def get_by_id(cls, db: AsyncSession, id: int) -> Optional["User"]:
         result = await db.execute(select(cls).where(cls.id == id))
         user = result.scalars().first()

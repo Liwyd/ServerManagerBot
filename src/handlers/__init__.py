@@ -1,6 +1,7 @@
 from eiogram import Router
 
 from . import base, fallback  # noqa
+from . import admins  # noqa
 from .certificates import setup_certificates_handlers
 from .clients import setup_clients_handlers
 from .firewalls import setup_firewalls_handlers
@@ -19,6 +20,7 @@ def setup_handlers() -> Router:
     router = Router()
     router.middleware.register(Middleware())
     router.include_router(base.router)
+    router.include_router(admins.router)
     router.include_router(setup_clients_handlers())
     router.include_router(setup_servers_handlers())
     router.include_router(setup_snapshots_handlers())

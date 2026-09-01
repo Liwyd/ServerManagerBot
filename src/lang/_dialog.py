@@ -64,6 +64,14 @@ class Dialogs(StrEnum):
     SERVERS_SELECT_DATACENTER = "🌍 Select a datacenter for the server:"
     SERVERS_SELECT_PLAN = "💰 Select a plan for the server:"
     SERVERS_SELECT_IMAGE = "🖼️ Select an image for the server:"
+    SERVERS_CREATE_CONFIRM = (
+        "<b>📋 Server Creation Summary</b>\n\n"
+        "📛 <b>Name:</b> <code>{name}</code>\n"
+        "🌍 <b>Datacenter:</b> <code>{datacenter}</code>\n"
+        "💰 <b>Plan:</b> <code>{plan}</code> ({cpu} cores, {ram}GB RAM)\n"
+        "🖼️ <b>Image:</b> <code>{image}</code>\n\n"
+        "⚠️ Do you want to create this server?"
+    )
     SERVERS_DATACENTERS_NOT_FOUND = "🔍❌ Not found datacenter."
     SERVERS_PLANS_NOT_FOUND = "🔍❌ No plans found for this location."
     SERVERS_CREATION_SUCCESS = "<b>🎉✅ Server created successfully.</b>\n⚙️ You can now manage the server."

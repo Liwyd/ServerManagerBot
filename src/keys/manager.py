@@ -317,6 +317,20 @@ class BotKB:
         return kb.as_markup()
 
     @classmethod
+    def servers_create_confirm(cls, target: int = 0) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+        kb.add(
+            text=Buttons.YES,
+            callback_data=BotCB(area=AreaType.SERVER, task=TaskType.UPDATE, target=target).pack(),
+        )
+        kb.add(
+            text=Buttons.NO,
+            callback_data=BotCB(area=AreaType.SERVER, task=TaskType.DELETE, target=target).pack(),
+        )
+        kb.adjust(2)
+        return kb.as_markup()
+
+    @classmethod
     def images_select(cls, images: List[Image], task: TaskType, target: int = 0) -> InlineKeyboardMarkup:
         kb = InlineKeyboardBuilder()
         for image in images:

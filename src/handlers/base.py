@@ -14,10 +14,11 @@ router = Router()
 async def start_handler(message: Message, db: AsyncSession, state: StateManager, dbuser: User):
     await state.clear_all(db=db)
     clients = await Client.get_all(db)
-    if not dbuser.is_owner:
+    admin = await User.is_admin(db, dbuser.id)
+    if not admin:
         clients = [client for client in clients if client.id in dbuser.client_ids()]
     update = await message.answer(
-        text=Dialogs.COMMAND_START, reply_markup=BotKB.home(clients=clients, is_owner=dbuser.is_owner)
+        text=Dialogs.COMMAND_START, reply_markup=BotKB.home(clients=clients, is_owner=admin)
     )
     return await UserMessage.clear(update)
 
@@ -27,10 +28,11 @@ async def home_menu(callback_query: CallbackQuery, db: AsyncSession, state: Stat
     await state.clear_all(db=db)
 
     clients = await Client.get_all(db)
-    if not dbuser.is_owner:
+    admin = await User.is_admin(db, dbuser.id)
+    if not admin:
         clients = [client for client in clients if client.id in dbuser.client_ids()]
     update = await callback_query.message.answer(
         text=Dialogs.COMMAND_START,
-        reply_markup=BotKB.home(clients=clients, is_owner=dbuser.is_owner),
+        reply_markup=BotKB.home(clients=clients, is_owner=admin),
     )
     return await UserMessage.clear(update)

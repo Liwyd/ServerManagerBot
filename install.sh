@@ -367,9 +367,11 @@ else
 fi
 
 if [ "$BUILD_LOCAL" = true ]; then
+    cp "$INSTALL_DIR/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml.bak"
     sed -i 's|^    image:.*|    build: .|' "$INSTALL_DIR/docker-compose.yml"
     log "Building Docker image locally..."
     docker compose build
+    mv "$INSTALL_DIR/docker-compose.yml.bak" "$INSTALL_DIR/docker-compose.yml"
 fi
 
 log "Starting services..."

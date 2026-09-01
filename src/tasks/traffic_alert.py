@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from src.config import BOT, TELEGRAM_ADMINS_ID, TRAFFIC_MONITOR_ALERT_PERCENT
-from src.db import Client, GetDB
+from src.db import Admin, Client, GetDB
 from src.lang import Dialogs
 from src.utils.async_hetzner import AsyncHetznerClient
 
@@ -33,8 +33,12 @@ async def _fetch_usage(hclient: AsyncHetznerClient) -> List[dict]:
 async def check_traffic_alerts():
     async with GetDB() as db:
         clients = await Client.get_all(db)
+        db_admin_ids = await Admin.get_all_user_ids(db)
     if not clients:
         return
+
+    all_admin_ids = set(TELEGRAM_ADMINS_ID)
+    all_admin_ids.update(db_admin_ids)
 
     for client in clients:
         try:
@@ -52,7 +56,7 @@ async def check_traffic_alerts():
                         percent=percent,
                         billable=item["billable"],
                     )
-                    for admin_id in TELEGRAM_ADMINS_ID:
+                    for admin_id in all_admin_ids:
                         try:
                             await BOT.send_message(chat_id=admin_id, text=text)
                         except Exception:
