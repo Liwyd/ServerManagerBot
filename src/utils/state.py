@@ -1,8 +1,10 @@
 from typing import Any, Dict, Optional, Union
+
 from eiogram.state.storage import BaseStorage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.db import UserState, GetDB
+
+from src.db import GetDB, UserState
 
 
 class DatabaseStorage(BaseStorage):

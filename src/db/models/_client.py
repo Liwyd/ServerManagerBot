@@ -1,11 +1,10 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import String, Integer
+from sqlalchemy import Integer, String
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.ext.asyncio import AsyncSession
-
 
 from ..core import Base
 

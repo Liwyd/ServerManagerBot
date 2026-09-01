@@ -1,10 +1,11 @@
 import logging
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from src.config import TRAFFIC_MONITOR_ENABLED
-from .traffic_alert import check_traffic_alerts
 
+from .traffic_alert import check_traffic_alerts
 
 logger = logging.getLogger(__name__)
 

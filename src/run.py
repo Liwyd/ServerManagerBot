@@ -4,8 +4,8 @@ from eiogram.types import BotCommand
 
 from src.config import BOT, DP, TELEGRAM_ADMINS_ID
 from src.handlers import setup_handlers
-from src.utils.state import DatabaseStorage
 from src.tasks import TaskManager
+from src.utils.state import DatabaseStorage
 
 
 async def main():

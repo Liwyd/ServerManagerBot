@@ -1,14 +1,17 @@
 import logging
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
-from eiogram.types import User as EioUser, Message, CallbackQuery
-from sqlalchemy import String, BigInteger, DateTime, Integer, Text, JSON
-from sqlalchemy.sql import select, delete
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING, Optional, Union
+
+from eiogram.types import CallbackQuery, Message
+from eiogram.types import User as EioUser
+from sqlalchemy import JSON, BigInteger, DateTime, Integer, String, Text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import delete, select
 
 from src.config import BOT, TELEGRAM_ADMINS_ID
+
 from ..core import Base, GetDB
 
 if TYPE_CHECKING:

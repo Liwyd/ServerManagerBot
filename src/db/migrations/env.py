@@ -1,13 +1,13 @@
 import asyncio
 import logging
 import time
-
 from logging.config import fileConfig
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
-from sqlalchemy import text
+
 from alembic import context
-from src.db.core import Base
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
 from src.config import SQLALCHEMY_DATABASE_URL
+from src.db.core import Base
 
 logger = logging.getLogger(__name__)
 

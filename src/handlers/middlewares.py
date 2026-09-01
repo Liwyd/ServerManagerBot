@@ -1,6 +1,8 @@
-from typing import Any, Callable, Dict, Awaitable
+from typing import Any, Awaitable, Callable, Dict
+
 from eiogram.middleware import BaseMiddleware
 from eiogram.types import Update
+
 from src.db import GetDB, User, UserMessage
 
 
