@@ -9,7 +9,7 @@ RUN apk add --no-cache tzdata && \
     pip install --no-cache-dir --upgrade uv && \
     rm -rf /var/cache/apk/*
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock readme.md ./
 RUN uv sync --frozen --no-dev
 
 COPY . .
