@@ -116,6 +116,69 @@ def uninstall():
         sys.exit(1)
 
 
+@cli.command()
+@click.option("--follow", "-f", is_flag=True, help="Follow log output")
+@click.option("--lines", "-n", default=100, help="Number of lines to show")
+def logs(follow, lines):
+    """View bot logs."""
+    import subprocess
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[red]No installation found.[/red]")
+        return
+
+    cmd = ["docker", "compose", "logs", f"--tail={lines}"]
+    if follow:
+        cmd.append("-f")
+    subprocess.run(cmd, cwd=install_dir)
+
+
+@cli.command()
+def restart():
+    """Restart bot services."""
+    import subprocess
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[red]No installation found.[/red]")
+        return
+
+    console.print("[bold green]Restarting services...[/bold green]")
+    subprocess.run(["docker", "compose", "restart"], cwd=install_dir)
+    console.print("[green]Done.[/green]")
+
+
+@cli.command()
+def stop():
+    """Stop bot services."""
+    import subprocess
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[red]No installation found.[/red]")
+        return
+
+    console.print("[bold yellow]Stopping services...[/bold yellow]")
+    subprocess.run(["docker", "compose", "down"], cwd=install_dir)
+    console.print("[green]Stopped.[/green]")
+
+
+@cli.command()
+def start():
+    """Start bot services."""
+    import subprocess
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[red]No installation found.[/red]")
+        return
+
+    console.print("[bold green]Starting services...[/bold green]")
+    subprocess.run(["docker", "compose", "up", "-d"], cwd=install_dir)
+    console.print("[green]Started.[/green]")
+
+
 import os
 
 from src.cli.commands.servers import (
