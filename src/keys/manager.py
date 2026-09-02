@@ -1225,5 +1225,5 @@ class BotKB:
                 ).pack(),
             )
         kb.adjust(1)
-        cls._back(kb=kb, area=AreaType.ADMIN, target=0, task=TaskType.MENU)
+        cls._back(kb=kb, area=AreaType.ADMIN, target=0)
         return kb.as_markup()

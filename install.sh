@@ -316,6 +316,7 @@ if [ "$MODE" = "update" ]; then
     echo "  Backup saved: $BACKUP_PATH"
     echo "  Logs:         cd $INSTALL_DIR && docker compose logs -f"
     echo "  Restart:      cd $INSTALL_DIR && docker compose restart"
+    echo "  Update:       hserver update"
     echo ""
     exit 0
 fi
