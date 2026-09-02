@@ -51,7 +51,10 @@ class BotKB:
                 InlineKeyboardButton(
                     text=Buttons.CLIENTS_CREATE, callback_data=BotCB(area=AreaType.CLIENT, task=TaskType.CREATE).pack()
                 ),
-                size=1,
+                InlineKeyboardButton(
+                    text=Buttons.ADMINS, callback_data=BotCB(area=AreaType.ADMIN, task=TaskType.MENU).pack()
+                ),
+                size=2,
             )
         kb.row(InlineKeyboardButton(text=Buttons.OWNER, url="https://t.me/ServerManagerBot"), size=1)
         return kb.as_markup()
@@ -1194,4 +1197,35 @@ class BotKB:
                 )
         kb.adjust(1)
         cls._back(kb=kb, area=AreaType.LOAD_BALANCER, target=lb_id)
+        return kb.as_markup()
+
+    @classmethod
+    def admins_menu(cls) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+        kb.add(
+            text="📋 Admin List",
+            callback_data=BotCB(area=AreaType.ADMIN, task=TaskType.LIST).pack(),
+        )
+        kb.add(
+            text="➕ Add Admin",
+            callback_data=BotCB(area=AreaType.ADMIN, task=TaskType.CREATE).pack(),
+        )
+        kb.adjust(2)
+        cls._back(kb=kb, area=AreaType.HOME)
+        return kb.as_markup()
+
+    @classmethod
+    def admins_list(cls, admins: list[dict]) -> InlineKeyboardMarkup:
+        kb = InlineKeyboardBuilder()
+        for admin in admins:
+            kb.add(
+                text=f"❌ {admin['name']} ({admin['user_id']})",
+                callback_data=BotCB(
+                    area=AreaType.ADMIN,
+                    task=TaskType.DELETE,
+                    target=str(admin["user_id"]),
+                ).pack(),
+            )
+        kb.adjust(1)
+        cls._back(kb=kb, area=AreaType.ADMIN, target=0, task=TaskType.MENU)
         return kb.as_markup()

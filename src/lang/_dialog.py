@@ -276,3 +276,16 @@ class Dialogs(StrEnum):
         "<b>Used:</b> <code>{percent}%</code>\n"
         "<b>Billable:</b> <code>{billable} GB</code>"
     )
+
+    ### Admins
+    ADMINS_MENU = "<b>👑 Admin Management</b>\n👇 Select an action:"
+    ADMINS_LIST = "<b>👑 Admin List</b>\n\n{admins}\n\n👇 Click an admin to remove them."
+    ADMINS_ADD_PROMPT = "✏️ Send the Telegram User ID to add as admin:"
+    ADMINS_ADDED = "<b>✅ Admin added:</b> <code>{user_id}</code>"
+    ADMINS_REMOVED = "<b>✅ Admin removed:</b> <code>{user_id}</code>"
+    ADMINS_CANNOT_ADD_SELF = "⚠️ You cannot add yourself."
+    ADMINS_CANNOT_REMOVE_SELF = "⚠️ You cannot remove yourself."
+    ADMINS_CANNOT_REMOVE_ENV = "⚠️ Cannot remove env-configured admin. Edit .env instead."
+    ADMINS_ALREADY_EXISTS = "⚠️ User is already an admin."
+    ADMINS_NOT_FOUND = "⚠️ User is not a bot-managed admin."
+    ADMINS_INVALID_ID = "⚠️ Invalid user ID."

@@ -63,6 +63,61 @@ def status(client):
     asyncio.run(_status())
 
 
+@cli.command()
+def install():
+    """Install ServerManagerBot."""
+    import subprocess
+    import sys
+
+    script = "https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh"
+    console.print("[bold green]Installing ServerManagerBot...[/bold green]")
+    result = subprocess.run(["bash", "-c", f"curl -fsSL {script} | sudo bash"], check=False)
+    if result.returncode != 0:
+        console.print("[red]Installation failed.[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+def update():
+    """Update ServerManagerBot."""
+    import subprocess
+    import sys
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[red]No installation found. Run 'hserver install' first.[/red]")
+        sys.exit(1)
+
+    console.print("[bold green]Updating ServerManagerBot...[/bold green]")
+    result = subprocess.run(["sudo", "bash", f"{install_dir}/install.sh", "--update"], check=False)
+    if result.returncode != 0:
+        console.print("[red]Update failed.[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+def delete():
+    """Remove ServerManagerBot."""
+    import subprocess
+    import sys
+
+    install_dir = "/opt/servermanagerbot"
+    if not os.path.isdir(install_dir):
+        console.print("[yellow]No installation found.[/yellow]")
+        return
+
+    if not click.confirm("[red]This will remove ServerManagerBot and all its data. Continue?[/red]", default=False):
+        return
+
+    console.print("[bold red]Removing ServerManagerBot...[/bold red]")
+    result = subprocess.run(["sudo", "bash", f"{install_dir}/install.sh", "--delete"], check=False)
+    if result.returncode != 0:
+        console.print("[red]Deletion failed.[/red]")
+        sys.exit(1)
+
+
+import os
+
 from src.cli.commands.servers import (
     list_servers,
     get_servers,

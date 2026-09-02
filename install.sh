@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-# ServerManagerBot - Installer & Updater
+# ServerManagerBot - Installer, Updater & Uninstaller
 # Usage:
 #   Install:  curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
 #   Update:   sudo bash install.sh --update
+#   Delete:   sudo bash install.sh --delete
 
 INSTALL_DIR="/opt/servermanagerbot"
 REPO_URL="https://github.com/Liwyd/ServerManagerBot.git"
@@ -102,6 +103,8 @@ fi
 MODE="install"
 if [ "$1" = "--update" ] || [ "$1" = "-u" ]; then
     MODE="update"
+elif [ "$1" = "--delete" ] || [ "$1" = "-d" ]; then
+    MODE="delete"
 fi
 
 header "ServerManagerBot - $MODE"
@@ -109,6 +112,39 @@ header "ServerManagerBot - $MODE"
 if [ "$EUID" -ne 0 ]; then
     error "This script must be run as root (use sudo)."
     exit 1
+fi
+
+# ── DELETE MODE ──────────────────────────────────────────────
+
+if [ "$MODE" = "delete" ]; then
+    if [ ! -d "$INSTALL_DIR" ]; then
+        error "No installation found at $INSTALL_DIR."
+        exit 1
+    fi
+
+    warn "This will remove ServerManagerBot and all its data."
+    echo -n "Type 'DELETE' to confirm: "
+    read -r CONFIRM
+    if [ "$CONFIRM" != "DELETE" ]; then
+        log "Cancelled."
+        exit 0
+    fi
+
+    cd "$INSTALL_DIR"
+    log "Stopping services..."
+    docker compose down -v 2>/dev/null || true
+
+    log "Removing Docker images..."
+    docker image prune -f 2>/dev/null || true
+    docker images "liwyd/servermanagerbot" -q | xargs docker rmi 2>/dev/null || true
+
+    log "Removing installation directory..."
+    cd /
+    rm -rf "$INSTALL_DIR"
+
+    header "Delete complete"
+    echo -e "${GREEN}ServerManagerBot has been removed.${NC}"
+    exit 0
 fi
 
 # ── Pre-flight checks ───────────────────────────────────────

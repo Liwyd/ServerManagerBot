@@ -17,6 +17,7 @@ class AreaType(StrEnum):
     SSH_KEY = "sk"
     CERTIFICATE = "ce"
     PLACEMENT_GROUP = "pg"
+    ADMIN = "ad"
 
 
 class TaskType(StrEnum):
@@ -86,6 +87,8 @@ class StepType(StrEnum):
     CERTIFICATES_DELETE = "ced"
     PLACEMENT_GROUPS_REMARK = "pgr"
     PLACEMENT_GROUPS_DELETE = "pgd"
+    ADMINS_ADD = "ada"
+    ADMINS_REMOVE = "adr"
 
 
 class BotCB(CallbackData, prefix="x"):

@@ -119,3 +119,6 @@ class Buttons(StrEnum):
     PLACEMENT_GROUPS_CREATE = "➕ Create Placement Group"
     PLACEMENT_GROUPS_REMARK = "✏️ Change Remark"
     PLACEMENT_GROUPS_DELETE = "🗑️ Delete Placement Group"
+
+    ### Admins
+    ADMINS = "👑 Admins"
