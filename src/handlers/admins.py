@@ -18,9 +18,7 @@ class AdminForm(StateGroup):
 async def admins_menu(callback_query: CallbackQuery, db: AsyncSession, dbuser: User):
     if not await User.is_admin(db, dbuser.id):
         return await callback_query.answer("Access Denied", show_alert=True)
-    return await callback_query.message.edit(
-        text=Dialogs.ADMINS_MENU, reply_markup=BotKB.admins_menu()
-    )
+    return await callback_query.message.edit(text=Dialogs.ADMINS_MENU, reply_markup=BotKB.admins_menu())
 
 
 @router.callback_query(BotCB.filter(area=AreaType.ADMIN, task=TaskType.LIST), IgnoreStateFilter())
@@ -51,9 +49,7 @@ async def admins_list(callback_query: CallbackQuery, db: AsyncSession, dbuser: U
         lines.append(f"• <code>{a['user_id']}</code> — {a['name']} [{a['source']}]")
 
     text = Dialogs.ADMINS_LIST.format(admins="\n".join(lines))
-    return await callback_query.message.edit(
-        text=text, reply_markup=BotKB.admins_list(all_admins)
-    )
+    return await callback_query.message.edit(text=text, reply_markup=BotKB.admins_list(all_admins))
 
 
 @router.callback_query(BotCB.filter(area=AreaType.ADMIN, task=TaskType.CREATE), IgnoreStateFilter())
@@ -61,9 +57,7 @@ async def admins_add_start(callback_query: CallbackQuery, db: AsyncSession, stat
     if not await User.is_admin(db, dbuser.id):
         return await callback_query.answer("Access Denied", show_alert=True)
     await state.upsert_context(db=db, state=AdminForm.add)
-    update = await callback_query.message.edit(
-        text=Dialogs.ADMINS_ADD_PROMPT, reply_markup=BotKB.admins_menu()
-    )
+    update = await callback_query.message.edit(text=Dialogs.ADMINS_ADD_PROMPT, reply_markup=BotKB.admins_menu())
     return await UserMessage.clear(update, keep_current=True)
 
 
@@ -105,6 +99,7 @@ async def admins_remove(callback_query: CallbackQuery, callback_data: BotCB, db:
         return await callback_query.answer(Dialogs.ADMINS_CANNOT_REMOVE_SELF, show_alert=True)
 
     from src.config import TELEGRAM_ADMINS_ID
+
     if target_id in TELEGRAM_ADMINS_ID:
         return await callback_query.answer(Dialogs.ADMINS_CANNOT_REMOVE_ENV, show_alert=True)
 
@@ -118,8 +113,6 @@ async def admins_remove(callback_query: CallbackQuery, callback_data: BotCB, db:
 
     admins = await Admin.get_all_user_ids(db)
     if not admins:
-        return await callback_query.message.edit(
-            text=Dialogs.ADMINS_MENU, reply_markup=BotKB.admins_menu()
-        )
+        return await callback_query.message.edit(text=Dialogs.ADMINS_MENU, reply_markup=BotKB.admins_menu())
 
     return await admins_list(callback_query, db, dbuser)

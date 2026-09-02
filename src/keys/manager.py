@@ -51,9 +51,7 @@ class BotKB:
                 InlineKeyboardButton(
                     text=Buttons.CLIENTS_CREATE, callback_data=BotCB(area=AreaType.CLIENT, task=TaskType.CREATE).pack()
                 ),
-                InlineKeyboardButton(
-                    text=Buttons.ADMINS, callback_data=BotCB(area=AreaType.ADMIN, task=TaskType.MENU).pack()
-                ),
+                InlineKeyboardButton(text=Buttons.ADMINS, callback_data=BotCB(area=AreaType.ADMIN, task=TaskType.MENU).pack()),
                 size=2,
             )
         kb.row(InlineKeyboardButton(text=Buttons.OWNER, url="https://t.me/ServerManagerBot"), size=1)
