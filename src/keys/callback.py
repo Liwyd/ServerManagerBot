@@ -26,6 +26,7 @@ class TaskType(StrEnum):
     CREATE = "cr"
     INFO = "nf"
     UPDATE = "pt"
+    DELETE = "dl"
 
 
 class StepType(StrEnum):
