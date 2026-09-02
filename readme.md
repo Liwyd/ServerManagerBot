@@ -54,7 +54,7 @@ hserver update
 ## Uninstalling
 
 ```bash
-hserver delete
+hserver uninstall
 ```
 
 ---

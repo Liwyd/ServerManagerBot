@@ -3,9 +3,9 @@ set -e
 
 # ServerManagerBot - Installer, Updater & Uninstaller
 # Usage:
-#   Install:  curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
-#   Update:   sudo bash install.sh --update
-#   Delete:   sudo bash install.sh --delete
+#   Install:    curl -fsSL https://raw.githubusercontent.com/Liwyd/ServerManagerBot/master/install.sh -o /tmp/install.sh && sudo bash /tmp/install.sh
+#   Update:     sudo bash install.sh --update
+#   Uninstall:  sudo bash install.sh --delete
 
 INSTALL_DIR="/opt/servermanagerbot"
 REPO_URL="https://github.com/Liwyd/ServerManagerBot.git"

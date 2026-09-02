@@ -96,7 +96,7 @@ def update():
 
 
 @cli.command()
-def delete():
+def uninstall():
     """Remove ServerManagerBot."""
     import subprocess
     import sys
@@ -112,7 +112,7 @@ def delete():
     console.print("[bold red]Removing ServerManagerBot...[/bold red]")
     result = subprocess.run(["sudo", "bash", f"{install_dir}/install.sh", "--delete"], check=False)
     if result.returncode != 0:
-        console.print("[red]Deletion failed.[/red]")
+        console.print("[red]Uninstall failed.[/red]")
         sys.exit(1)
 
 
