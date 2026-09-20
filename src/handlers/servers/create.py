@@ -144,7 +144,8 @@ async def confirm_create_handler(
     datacenter = await hetzner.get_datacenter_by_id(int(state_data["datacenter_id"]))
 
     if not all([image, server_type, datacenter]):
-        return await callback_query.answer(text=Dialogs.SERVERS_CREATION_FAILED, show_alert=True)
+        await callback_query.message.edit(text=Dialogs.SERVERS_CREATION_FAILED, reply_markup=BotKB.servers_back())
+        return
 
     try:
         response = await hetzner.create_server(
@@ -155,10 +156,12 @@ async def confirm_create_handler(
         )
     except Exception as e:
         logging.exception("Server creation failed")
-        return await callback_query.answer(text=f"{Dialogs.SERVERS_CREATION_FAILED}\n{e}", show_alert=True)
+        await callback_query.message.edit(text=f"{Dialogs.SERVERS_CREATION_FAILED}\n{e}", reply_markup=BotKB.servers_back())
+        return
 
     if not response or not response.server:
-        return await callback_query.answer(text=Dialogs.SERVERS_CREATION_FAILED, show_alert=True)
+        await callback_query.message.edit(text=Dialogs.SERVERS_CREATION_FAILED, reply_markup=BotKB.servers_back())
+        return
 
     await state.clear_state(db=db)
     update = await callback_query.message.edit(
