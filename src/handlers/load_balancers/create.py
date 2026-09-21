@@ -1,5 +1,3 @@
-import asyncio
-
 from eiogram import Router
 from eiogram.filters import StateFilter, Text
 from eiogram.state import State, StateGroup, StateManager
@@ -31,7 +29,7 @@ async def load_balancers_create(
 async def remark_handler(
     message: Message, db: AsyncSession, state: StateManager, hetzner: GetHetzner, state_data: dict, __: ShouldBeOwner
 ):
-    lb_types = await asyncio.to_thread(hetzner._client.load_balancer_types.get_all)
+    lb_types = await hetzner.get_load_balancer_types()
     if not lb_types:
         update = await message.answer(text=Dialogs.LOAD_BALANCERS_CREATE_FAILED)
         return await UserMessage.add(update)
@@ -54,7 +52,7 @@ async def select_type(
     hetzner: GetHetzner,
     __: ShouldBeOwner,
 ):
-    lb_types = await asyncio.to_thread(hetzner._client.load_balancer_types.get_all)
+    lb_types = await hetzner.get_load_balancer_types()
     selected_type = None
     for lb_type in lb_types:
         if lb_type.id == int(callback_data.target):
