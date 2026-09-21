@@ -336,7 +336,9 @@ class AsyncHetznerClient:
             "auto_delete": kwargs.get("auto_delete", False),
         }
         if "datacenter" in kwargs and kwargs["datacenter"] is not None:
-            payload["datacenter"] = _name(kwargs["datacenter"]) if isinstance(kwargs["datacenter"], str) else _id(kwargs["datacenter"])
+            payload["datacenter"] = (
+                _name(kwargs["datacenter"]) if isinstance(kwargs["datacenter"], str) else _id(kwargs["datacenter"])
+            )
         if "assignee_id" in kwargs:
             payload["assignee_id"] = kwargs["assignee_id"]
         if "labels" in kwargs:
@@ -465,9 +467,7 @@ class AsyncHetznerClient:
         return await self._request("DELETE", f"/floating_ips/{_id(floating_ip)}")
 
     async def assign_floating_ip(self, floating_ip: Any, server: Any) -> Any:
-        return await self._request(
-            "POST", f"/floating_ips/{_id(floating_ip)}/actions/assign", json={"server": _id(server)}
-        )
+        return await self._request("POST", f"/floating_ips/{_id(floating_ip)}/actions/assign", json={"server": _id(server)})
 
     async def unassign_floating_ip(self, floating_ip: Any) -> Any:
         return await self._request("POST", f"/floating_ips/{_id(floating_ip)}/actions/unassign")
@@ -659,17 +659,13 @@ class AsyncHetznerClient:
             if target.type == "server" and target.server:
                 t["server"] = {"id": target.server.id}
             payload = {"target": t}
-        return await self._request(
-            "POST", f"/load_balancers/{_id(load_balancer)}/actions/remove_target", json=payload
-        )
+        return await self._request("POST", f"/load_balancers/{_id(load_balancer)}/actions/remove_target", json=payload)
 
     async def add_load_balancer_service(self, load_balancer: Any, service: Any) -> Any:
         return await self._request("POST", f"/load_balancers/{_id(load_balancer)}/actions/add_service", json=service)
 
     async def delete_load_balancer_service(self, load_balancer: Any, service: Any) -> Any:
-        return await self._request(
-            "POST", f"/load_balancers/{_id(load_balancer)}/actions/delete_service", json=service
-        )
+        return await self._request("POST", f"/load_balancers/{_id(load_balancer)}/actions/delete_service", json=service)
 
     async def change_load_balancer_type(self, load_balancer: Any, load_balancer_type: Any) -> Any:
         return await self._request(
