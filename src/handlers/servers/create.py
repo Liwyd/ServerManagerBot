@@ -54,7 +54,14 @@ async def datacenter_handler(
     hetzner: GetHetzner,
     __: ShouldBeOwner,
 ):
+    datacenter = await hetzner.get_datacenter_by_id(int(callback_data.target))
+    if not datacenter:
+        return await callback_query.answer(text=Dialogs.SERVERS_DATACENTERS_NOT_FOUND, show_alert=True)
     plans = await hetzner.get_server_types()
+    if not plans:
+        return await callback_query.answer(text=Dialogs.SERVERS_PLANS_NOT_FOUND, show_alert=True)
+    available_ids = {st.id for st in datacenter.server_types.available}
+    plans = [p for p in plans if p.id in available_ids]
     if not plans:
         return await callback_query.answer(text=Dialogs.SERVERS_PLANS_NOT_FOUND, show_alert=True)
     plans.sort(key=lambda x: float(x.prices[0]["price_monthly"]["net"]))
