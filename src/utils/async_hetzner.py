@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -22,7 +23,7 @@ class AttrDict(dict):
         try:
             value = self[name]
         except KeyError:
-            raise AttributeError(name)
+            return None
         return _convert(value)
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -74,24 +75,31 @@ class AsyncHetznerClient:
 
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         headers = {"Authorization": f"Bearer {self._token}"}
-        timeout = aiohttp.ClientTimeout(total=30)
-        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
-            url = f"{API_BASE}{path}"
-            logger.debug("Hetzner API %s %s", method, url)
-            async with session.request(method, url, **kwargs) as resp:
-                try:
-                    data = await resp.json(content_type=None)
-                except Exception:
-                    text = await resp.text()
-                    raise HetznerAPIError(resp.status, "parse_error", f"Invalid response: {text[:200]}")
-                if resp.status >= 400:
-                    error = data.get("error", {})
-                    raise HetznerAPIError(
-                        status=resp.status,
-                        error_type=error.get("code", "unknown"),
-                        message=error.get("message", str(data)),
-                    )
-                return _convert(data)
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)
+        try:
+            async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+                url = f"{API_BASE}{path}"
+                logger.debug("Hetzner API %s %s", method, url)
+                async with session.request(method, url, **kwargs) as resp:
+                    try:
+                        data = await resp.json(content_type=None)
+                    except Exception:
+                        text = await resp.text()
+                        raise HetznerAPIError(resp.status, "parse_error", f"Invalid response: {text[:200]}")
+                    if resp.status >= 400:
+                        error = data.get("error", {})
+                        raise HetznerAPIError(
+                            status=resp.status,
+                            error_type=error.get("code", "unknown"),
+                            message=error.get("message", str(data)),
+                        )
+                    return _convert(data)
+        except aiohttp.ClientConnectorError as e:
+            raise HetznerAPIError(0, "connection_error", f"Cannot reach Hetzner API: {e}")
+        except asyncio.TimeoutError as e:
+            raise HetznerAPIError(0, "timeout", f"Request timed out: {e}")
+        except aiohttp.ClientError as e:
+            raise HetznerAPIError(0, "client_error", f"HTTP client error: {e}")
 
     async def _get_all(self, path: str, key: str, params: dict | None = None) -> list:
         results: list = []
