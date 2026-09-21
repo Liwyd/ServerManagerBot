@@ -31,24 +31,32 @@ class AttrDict(dict):
 
 
 def _convert(obj: Any) -> Any:
-    if isinstance(obj, dict):
-        return AttrDict({k: _convert(v) for k, v in obj.items()})
-    if isinstance(obj, list):
-        return [_convert(item) for item in obj]
-    if isinstance(obj, str):
-        # Try multiple ISO datetime formats
-        for fmt in (
-            lambda s: datetime.fromisoformat(s.replace("Z", "+00:00")),
-            lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%f%z"),
-            lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z"),
-            lambda s: datetime.strptime(s, "%Y-%m-%d"),
-        ):
-            try:
-                return fmt(obj)
-            except (ValueError, TypeError):
-                continue
+    try:
+        if isinstance(obj, dict):
+            return AttrDict({k: _convert(v) for k, v in obj.items()})
+        if isinstance(obj, list):
+            return [_convert(item) for item in obj]
+        if isinstance(obj, str):
+            s = obj.strip()
+            if "T" in s:
+                for fmt in (
+                    lambda s: datetime.fromisoformat(s.replace("Z", "+00:00")),
+                    lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%f%z"),
+                    lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z"),
+                ):
+                    try:
+                        return fmt(s)
+                    except (ValueError, TypeError):
+                        continue
+            elif "-" in s and len(s) == 10:
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d")
+                except ValueError:
+                    pass
+            return obj
         return obj
-    return obj
+    except Exception:
+        return obj
 
 
 def _id(obj: Any) -> Any:
@@ -108,7 +116,18 @@ class AsyncHetznerClient:
                             error_type=error.get("code", "unknown"),
                             message=error.get("message", str(data)),
                         )
-                    return _convert(data)
+                    try:
+                        result = _convert(data)
+                    except Exception as e:
+                        logger.error("_convert failed: %s", e)
+                        result = data
+                    logger.info(
+                        "Hetzner %s %s -> keys=%s",
+                        method,
+                        path,
+                        list(result.keys()) if isinstance(result, dict) else type(result).__name__,
+                    )
+                    return result
         except aiohttp.ClientConnectorError as e:
             raise HetznerAPIError(0, "connection_error", f"Cannot reach Hetzner API: {e}")
         except asyncio.TimeoutError as e:
