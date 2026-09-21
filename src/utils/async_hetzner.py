@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import aiohttp
@@ -33,6 +34,11 @@ def _convert(obj: Any) -> Any:
         return AttrDict({k: _convert(v) for k, v in obj.items()})
     if isinstance(obj, list):
         return [_convert(item) for item in obj]
+    if isinstance(obj, str):
+        try:
+            return datetime.fromisoformat(obj.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            return obj
     return obj
 
 
@@ -68,11 +74,16 @@ class AsyncHetznerClient:
 
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         headers = {"Authorization": f"Bearer {self._token}"}
-        async with aiohttp.ClientSession(headers=headers) as session:
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
             url = f"{API_BASE}{path}"
-            logger.debug("Hetznner API %s %s", method, url)
+            logger.debug("Hetzner API %s %s", method, url)
             async with session.request(method, url, **kwargs) as resp:
-                data = await resp.json(content_type=None)
+                try:
+                    data = await resp.json(content_type=None)
+                except Exception:
+                    text = await resp.text()
+                    raise HetznerAPIError(resp.status, "parse_error", f"Invalid response: {text[:200]}")
                 if resp.status >= 400:
                     error = data.get("error", {})
                     raise HetznerAPIError(
