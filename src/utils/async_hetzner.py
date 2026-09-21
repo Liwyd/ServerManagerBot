@@ -36,10 +36,18 @@ def _convert(obj: Any) -> Any:
     if isinstance(obj, list):
         return [_convert(item) for item in obj]
     if isinstance(obj, str):
-        try:
-            return datetime.fromisoformat(obj.replace("Z", "+00:00"))
-        except (ValueError, TypeError):
-            return obj
+        # Try multiple ISO datetime formats
+        for fmt in (
+            lambda s: datetime.fromisoformat(s.replace("Z", "+00:00")),
+            lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%f%z"),
+            lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z"),
+            lambda s: datetime.strptime(s, "%Y-%m-%d"),
+        ):
+            try:
+                return fmt(obj)
+            except (ValueError, TypeError):
+                continue
+        return obj
     return obj
 
 
@@ -48,10 +56,17 @@ def _id(obj: Any) -> Any:
         return None
     if isinstance(obj, (int, str)):
         return obj
+    # Try id_or_name (hcloud SDK objects)
     if hasattr(obj, "id_or_name"):
         return obj.id_or_name
+    # Try .id (AttrDict, domain objects, etc.)
     if hasattr(obj, "id"):
-        return obj.id
+        try:
+            val = obj.id
+            return val if isinstance(val, (int, str)) else _id(val)
+        except Exception:
+            pass
+    # Try dict-style access
     if isinstance(obj, dict) and "id" in obj:
         return obj["id"]
     return obj
