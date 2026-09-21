@@ -204,37 +204,8 @@ if [ "$MODE" = "update" ]; then
     backup_database "$BACKUP_PATH/db_backup.sql" || true
 
     # Pull new image
-    header "Pulling latest image"
+    header "Building updated image"
     OLD_IMAGE=$(docker inspect --format='{{.Image}}' servermanagerbot-servermanagerbot-1 2>/dev/null || echo "none")
-    if docker compose pull 2>/dev/null; then
-        log "New image pulled successfully."
-    else
-        warn "Could not pull from Docker Hub. Attempting local build..."
-        if [ -f "Dockerfile" ]; then
-            docker compose build --no-cache 2>/dev/null || rollback_update "$BACKUP_PATH"
-            log "Built locally."
-        else
-            error "No Dockerfile found and no remote image available."
-            rollback_update "$BACKUP_PATH"
-        fi
-    fi
-
-    NEW_IMAGE=$(docker inspect --format='{{.Image}}' servermanagerbot-servermanagerbot-1 2>/dev/null || echo "none")
-
-    # Check if image actually changed
-    if [ "$OLD_IMAGE" = "$NEW_IMAGE" ] && [ "$OLD_IMAGE" != "none" ]; then
-        log "Image unchanged. Checking for source code updates..."
-        git pull origin "$BRANCH" 2>/dev/null || true
-        # Rebuild if source changed
-        if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
-            log "Source code changed, rebuilding..."
-            docker compose build --no-cache 2>/dev/null || rollback_update "$BACKUP_PATH"
-        else
-            log "No changes detected. Nothing to update."
-            rm -rf "$BACKUP_PATH"
-            exit 0
-        fi
-    fi
 
     # Stop old container
     header "Stopping old container"
@@ -249,6 +220,10 @@ if [ "$MODE" = "update" ]; then
         git clone --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
         cd "$INSTALL_DIR"
     }
+
+    # Build from source
+    log "Building Docker image from source..."
+    docker compose build --no-cache 2>/dev/null || rollback_update "$BACKUP_PATH"
 
     # Run migrations
     header "Running database migrations"
@@ -311,6 +286,11 @@ if [ "$MODE" = "update" ]; then
     fi
 
     header "Update complete"
+    # Install hserver CLI
+    log "Installing hserver CLI..."
+    cp "$INSTALL_DIR/hserver" /usr/local/bin/hserver
+    chmod +x /usr/local/bin/hserver
+    log "hserver CLI installed."
     echo -e "${GREEN}ServerManagerBot updated successfully!${NC}"
     echo ""
     echo "  Backup saved: $BACKUP_PATH"
@@ -394,24 +374,10 @@ fi
 mkdir -p "$INSTALL_DIR/data"
 mkdir -p "$BACKUP_DIR"
 
-header "Pulling and starting services"
+header "Building and starting services"
 
-BUILD_LOCAL=false
-log "Pulling Docker image from Docker Hub..."
-if docker compose pull 2>/dev/null; then
-    log "Image pulled successfully."
-else
-    warn "Docker Hub image not found. Building locally..."
-    BUILD_LOCAL=true
-fi
-
-if [ "$BUILD_LOCAL" = true ]; then
-    cp "$INSTALL_DIR/docker-compose.yml" "$INSTALL_DIR/docker-compose.yml.bak"
-    sed -i 's|^    image:.*|    build: .|' "$INSTALL_DIR/docker-compose.yml"
-    log "Building Docker image locally..."
-    docker compose build
-    mv "$INSTALL_DIR/docker-compose.yml.bak" "$INSTALL_DIR/docker-compose.yml"
-fi
+log "Building Docker image from source..."
+docker compose build --no-cache
 
 log "Starting services..."
 docker compose up -d
@@ -436,6 +402,12 @@ if [ $WAITED -ge $MAX_WAIT ]; then
 fi
 
 header "Installation complete"
+
+# Install hserver CLI
+log "Installing hserver CLI..."
+cp "$INSTALL_DIR/hserver" /usr/local/bin/hserver
+chmod +x /usr/local/bin/hserver
+log "hserver CLI installed."
 
 echo -e "${GREEN}ServerManagerBot is running!${NC}"
 echo ""

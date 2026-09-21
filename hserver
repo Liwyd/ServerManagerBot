@@ -1,0 +1,69 @@
+#!/bin/bash
+set -e
+
+INSTALL_DIR="/opt/servermanagerbot"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log()    { echo -e "${GREEN}[INFO]${NC} $*"; }
+warn()   { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error()  { echo -e "${RED}[ERROR]${NC} $*"; }
+
+usage() {
+    echo "Usage: hserver <command>"
+    echo ""
+    echo "Commands:"
+    echo "  update      Update ServerManagerBot"
+    echo "  restart     Restart the bot"
+    echo "  stop        Stop the bot"
+    echo "  start       Start the bot"
+    echo "  logs        Follow bot logs"
+    echo "  uninstall   Remove ServerManagerBot"
+    echo ""
+    exit 1
+}
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+if [ ! -d "$INSTALL_DIR" ]; then
+    error "ServerManagerBot not found at $INSTALL_DIR"
+    exit 1
+fi
+
+cd "$INSTALL_DIR"
+
+case "$1" in
+    update)
+        sudo bash "$INSTALL_DIR/install.sh" --update
+        ;;
+    restart)
+        log "Restarting ServerManagerBot..."
+        docker compose restart servermanagerbot
+        log "Done."
+        ;;
+    stop)
+        log "Stopping ServerManagerBot..."
+        docker compose stop servermanagerbot
+        log "Done."
+        ;;
+    start)
+        log "Starting ServerManagerBot..."
+        docker compose start servermanagerbot
+        log "Done."
+        ;;
+    logs)
+        docker compose logs -f servermanagerbot
+        ;;
+    uninstall)
+        sudo bash "$INSTALL_DIR/install.sh" --delete
+        ;;
+    *)
+        error "Unknown command: $1"
+        usage
+        ;;
+esac
